@@ -2,15 +2,11 @@ const mongoose = require('mongoose');
 const mongoosePaginate = require("mongoose-paginate");
 const mongooseAggregatePaginate = require("mongoose-aggregate-paginate");
 const companyCategorySchema = new mongoose.Schema({
-    categoryName: {
+    eventCategoryName: {
         type: String,
         required: true,
     },
-    currency: {
-        type: String,
-        required: true,
-    },
-    seminarFee: {
+    showInOrder: {
         type: Number,
         required: true,
     },
@@ -22,6 +18,5 @@ const companyCategorySchema = new mongoose.Schema({
 }, { timestamps: true });
 companyCategorySchema.plugin(mongoosePaginate);
 companyCategorySchema.plugin(mongooseAggregatePaginate);
-const CompanyCategory = mongoose.model('CompanyCategory', companyCategorySchema);
-
+const CompanyCategory = mongoose.model('eventCategory', companyCategorySchema);
 module.exports = CompanyCategory;
