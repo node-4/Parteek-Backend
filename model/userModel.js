@@ -36,6 +36,35 @@ const userSchema = new mongoose.Schema({
     accountVerification: {
         type: Boolean,
         default: false,
+    },
+    designation: {
+        type: String,
+    },
+    countryId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Location"
+    },
+    cityId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Location"
+    },
+    bio: {
+        type: String,
+    },
+    pinCode: {
+        type: String,
+    },
+    showEmail: {
+        type: Boolean,
+        default: false,
+    },
+    showContact: {
+        type: Boolean,
+        default: false,
+    },
+    openForAppointment: {
+        type: Boolean,
+        default: false,
     }
 }, { timestamps: true });
 userSchema.plugin(mongoosePaginate);

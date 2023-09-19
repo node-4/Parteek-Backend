@@ -1,7 +1,29 @@
 const bcrypt = require('bcrypt');
+const advertisement = require('../model/Advertisement/advertisement');
+const banner = require('../model/Banner/banner');
+const company = require('../model/company/company');
+const CompanyCategory = require('../model/company/companyCategoryModel');
+const delegate = require('../model/Delegate/delegate');
+const dgDesk = require('../model/dgDesk/dgDesk');
+const eventCategory = require('../model/Event/1eventCategory');
+const eventOrganiser = require('../model/Event/2eventOrganiser');
+const event = require('../model/Event/3Event');
+const eventSession = require('../model/Event/4EventSession');
+const locationFact = require('../model/EventLocationFacts/locationFact');
+const locationFactsBanners = require('../model/EventLocationFacts/locationFactsBanners')
+const eventSchedule = require('../model/EventSchedule/eventSchedule');
+const exhibitor = require('../model/Exhibitor/Exhibitor');
+const feedbackParameter = require('../model/FeedbackParameter/feedbackParameter');
+const helpline = require('../model/Helpline/helpline');
+const meeting = require('../model/Meeting/meeting');
+const paper = require('../model/Speaker/paper');
+const speaker = require('../model/Speaker/speaker');
+const sponser = require('../model/Sponser/sponser');
+const uploadAlbum = require('../model/UploadAlbum/uploadAlbum');
+const Location = require('../model/locationModel');
+const User = require('../model/userModel');
 const jwt = require('jsonwebtoken');
 var newOTP = require("otp-generators");
-const User = require('../model/userModel');
 const authConfig = require("../configs/auth.config");
 
 exports.login = async (req, res) => {
@@ -87,24 +109,38 @@ exports.createUser = async (req, res) => {
 };
 exports.update = async (req, res) => {
     try {
-        const { typeofMember, username, email, password, mobile } = req.body;
+        const { typeofMember, username, email, password, mobile, designation, address1, address2, countryId, cityId, bio, pinCode, showEmail, showContact, openForAppointment } = req.body;
         const userId = req.params.id;
+        let hashedPassword;
         const user = await User.findById(userId);
         if (user) {
             const existingUser = await User.findOne({ _id: { $ne: user._id }, username });
-            if (existingUser) {
-                return res.status(400).json({ status: 400, message: "User name already exists" });
-            }
+            if (existingUser) { return res.status(400).json({ status: 400, message: "User name already exists" }); }
             const existingEmail = await User.findOne({ _id: { $ne: user._id }, email });
-            if (existingEmail) {
-                return res.status(400).json({ status: 400, message: "Email already exists" });
-            }
+            if (existingEmail) { return res.status(400).json({ status: 400, message: "Email already exists" }); }
             const existingMobile = await User.findOne({ _id: { $ne: user._id }, mobile });
-            if (existingMobile) {
-                return res.status(400).json({ status: 400, message: "Mobile already exists" });
+            if (existingMobile) { return res.status(400).json({ status: 400, message: "Mobile already exists" }); }
+            if (countryId) { const findCompany = await Location.findById(countryId); if (!findCompany) { return res.status(404).json({ status: 404, message: 'Country not found' }); } }
+            if (cityId) { const findEventCategoryId = await Location.findById(cityId); if (!findEventCategoryId) { return res.status(404).json({ status: 404, message: 'City not found' }); } }
+            if (password) { hashedPassword = await bcrypt.hash(password, 10); }
+            let obj = {
+                typeofMember: typeofMember || user.typeofMember,
+                username: username || user.username,
+                email: email || user.email,
+                password: hashedPassword || user.password,
+                mobile: mobile || user.mobile,
+                designation: designation || user.designation,
+                address1: address1 || user.address1,
+                address2: address2 || user.address2,
+                countryId: countryId || user.countryId,
+                cityId: cityId || user.cityId,
+                bio: bio || user.bio,
+                pinCode: pinCode || user.pinCode,
+                showEmail: showEmail || user.showEmail,
+                showContact: showContact || user.showContact,
+                openForAppointment: openForAppointment || user.openForAppointment,
             }
-            const hashedPassword = await bcrypt.hash(password, 10);
-            const newUser = await User.findByIdAndUpdate({ _id: user._id }, { $set: { typeofMember, username, email, password: hashedPassword, mobile } }, { new: true });
+            const newUser = await User.findByIdAndUpdate({ _id: user._id }, { $set: obj }, { new: true });
             return res.status(201).json({ status: 200, message: 'User update successfully', data: newUser });
         }
         return res.status(201).json({ message: "user not Found", status: 404, data: {}, });

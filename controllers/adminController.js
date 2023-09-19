@@ -16,6 +16,8 @@ const exhibitor = require('../model/Exhibitor/Exhibitor');
 const feedbackParameter = require('../model/FeedbackParameter/feedbackParameter');
 const helpline = require('../model/Helpline/helpline');
 const meeting = require('../model/Meeting/meeting');
+const nearByInterestType = require('../model/NearByPlaceAndInterest/nearByInterestType');
+const nearByPlaceAndInterest = require('../model/NearByPlaceAndInterest/nearByPlaceAndInterest');
 const paper = require('../model/Speaker/paper');
 const speaker = require('../model/Speaker/speaker');
 const sponser = require('../model/Sponser/sponser');
@@ -1734,6 +1736,7 @@ exports.updateHelpline = async (req, res) => {
                                 toDate: req.body.toDate || findData.toDate,
                                 isPublished: isPublished || findData.isPublished,
                                 showInOrder: showInOrder || findData.showInOrder,
+                                location: req.body.location || findData.location
                         }
                         const newCategory = await helpline.findByIdAndUpdate({ _id: findData._id }, { $set: data }, { new: true });
                         return res.status(200).json({ status: 200, message: 'Helpline update successfully', data: newCategory });
@@ -2961,5 +2964,411 @@ exports.getAllMeeting = async (req, res) => {
         } catch (error) {
                 console.error(error);
                 return res.status(500).json({ error: 'Failed to fetch Meeting' });
+        }
+};
+exports.createNearByType = async (req, res) => {
+        try {
+                const { name, image } = req.body;
+                if (!name) {
+                        return res.status(201).json({ message: "Provide require fields  name", status: 404, data: {}, });
+                }
+                let findNearByInterestType = await nearByInterestType.findOne({ name, type: "NearBy" });
+                if (findNearByInterestType) {
+                        return res.status(409).json({ status: 409, message: 'NearByType already successfully', data: findNearByInterestType });
+                } else {
+                        if (req.file) {
+                                req.body.image = req.file.path
+                        } else {
+                                return res.status(201).json({ message: "NearByType Image require", status: 404, data: {}, });
+                        }
+                        req.body.type = "NearBy";
+                        const newCategory = await nearByInterestType.create(req.body);
+                        return res.status(200).json({ status: 200, message: 'NearByType created successfully', data: newCategory });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to create NearByType' });
+        }
+};
+exports.getNearByTypeById = async (req, res) => {
+        try {
+                const nearByInterestTypeId = req.params.nearByInterestTypeId;
+                const user = await nearByInterestType.findById({ _id: nearByInterestTypeId, type: "NearBy" });
+                if (user) {
+                        return res.status(201).json({ message: "NearByType found successfully", status: 200, data: user, });
+                }
+                return res.status(201).json({ message: "NearByType not Found", status: 404, data: {}, });
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: "Failed to retrieve NearByType" });
+        }
+};
+exports.updateNearByType = async (req, res) => {
+        try {
+                const { name, image, type } = req.body;
+                const nearByInterestTypeId = req.params.nearByInterestTypeId;
+                const findData = await nearByInterestType.findById({ _id: nearByInterestTypeId, type: "NearBy" });
+                if (!findData) {
+                        return res.status(201).json({ message: "NearByType not Found", status: 404, data: {}, });
+                }
+                let findCompany = await nearByInterestType.findOne({ _id: { $ne: findData._id }, name, type: "NearBy", });
+                if (findCompany) {
+                        return res.status(409).json({ status: 409, message: 'NearByType already Exit', data: findCompany });
+                } else {
+                        if (req.file) {
+                                req.body.image = req.file.path;
+                        } else {
+                                req.body.image = findData.image;
+                        }
+                        let data = {
+                                image: req.body.image,
+                                name: name || findData.name,
+                                type: "NearBy" || findData.type,
+                        }
+                        const newCategory = await nearByInterestType.findByIdAndUpdate({ _id: findData._id }, { $set: data }, { new: true });
+                        return res.status(200).json({ status: 200, message: 'NearByType update successfully', data: newCategory });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to create NearByType' });
+        }
+};
+exports.deleteNearByType = async (req, res) => {
+        try {
+                const nearByInterestTypeId = req.params.id;
+                const user = await nearByInterestType.findById({ _id: nearByInterestTypeId, type: "NearBy" });
+                if (user) {
+                        const user1 = await nearByInterestType.findByIdAndDelete({ _id: user._id });;
+                        if (user1) {
+                                return res.status(201).json({ message: "NearByType delete successfully.", status: 200, data: {}, });
+                        }
+                } else {
+                        return res.status(201).json({ message: "NearByType not Found", status: 404, data: {}, });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: "Failed to retrieve NearByType" });
+        }
+};
+exports.getAllNearByType = async (req, res) => {
+        try {
+                const categories = await nearByInterestType.find({ type: "NearBy" });
+                if (categories.length > 0) {
+                        return res.status(200).json({ status: 200, message: 'NearByType found successfully', data: categories });
+                } else {
+                        return res.status(404).json({ status: 404, message: 'NearByType not found.', data: categories });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to fetch NearByType' });
+        }
+};
+exports.createInterestType = async (req, res) => {
+        try {
+                const { name, image } = req.body;
+                if (!name) {
+                        return res.status(201).json({ message: "Provide require fields  name", status: 404, data: {}, });
+                }
+                let findNearByInterestType = await nearByInterestType.findOne({ name, type: "Interest" });
+                if (findNearByInterestType) {
+                        return res.status(409).json({ status: 409, message: 'InterestType already successfully', data: findNearByInterestType });
+                } else {
+                        if (req.file) {
+                                req.body.image = req.file.path
+                        } else {
+                                return res.status(201).json({ message: "InterestType Image require", status: 404, data: {}, });
+                        }
+                        req.body.type = "Interest";
+                        const newCategory = await nearByInterestType.create(req.body);
+                        return res.status(200).json({ status: 200, message: 'InterestType created successfully', data: newCategory });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to create InterestType' });
+        }
+};
+exports.getInterestTypeById = async (req, res) => {
+        try {
+                const nearByInterestTypeId = req.params.nearByInterestTypeId;
+                const user = await nearByInterestType.findById({ _id: nearByInterestTypeId, type: "Interest" });
+                if (user) {
+                        return res.status(201).json({ message: "InterestType found successfully", status: 200, data: user, });
+                }
+                return res.status(201).json({ message: "InterestType not Found", status: 404, data: {}, });
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: "Failed to retrieve InterestType" });
+        }
+};
+exports.updateInterestType = async (req, res) => {
+        try {
+                const { name, image, type } = req.body;
+                const nearByInterestTypeId = req.params.nearByInterestTypeId;
+                const findData = await nearByInterestType.findById({ _id: nearByInterestTypeId, type: "Interest" });
+                if (!findData) {
+                        return res.status(201).json({ message: "InterestType not Found", status: 404, data: {}, });
+                }
+                let findCompany = await nearByInterestType.findOne({ _id: { $ne: findData._id }, name, type: "Interest", });
+                if (findCompany) {
+                        return res.status(409).json({ status: 409, message: 'InterestType already Exit', data: findCompany });
+                } else {
+                        if (req.file) {
+                                req.body.image = req.file.path;
+                        } else {
+                                req.body.image = findData.image;
+                        }
+                        let data = {
+                                image: req.body.image,
+                                name: name || findData.name,
+                                type: "Interest" || findData.type,
+                        }
+                        const newCategory = await nearByInterestType.findByIdAndUpdate({ _id: findData._id }, { $set: data }, { new: true });
+                        return res.status(200).json({ status: 200, message: 'InterestType update successfully', data: newCategory });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to create InterestType' });
+        }
+};
+exports.deleteInterestType = async (req, res) => {
+        try {
+                const nearByInterestTypeId = req.params.id;
+                const user = await nearByInterestType.findById({ _id: nearByInterestTypeId, type: "Interest" });
+                if (user) {
+                        const user1 = await nearByInterestType.findByIdAndDelete({ _id: user._id });;
+                        if (user1) {
+                                return res.status(201).json({ message: "InterestType delete successfully.", status: 200, data: {}, });
+                        }
+                } else {
+                        return res.status(201).json({ message: "InterestType not Found", status: 404, data: {}, });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: "Failed to retrieve InterestType" });
+        }
+};
+exports.getAllInterestType = async (req, res) => {
+        try {
+                const categories = await nearByInterestType.find({ type: "Interest" });
+                if (categories.length > 0) {
+                        return res.status(200).json({ status: 200, message: 'InterestType found successfully', data: categories });
+                } else {
+                        return res.status(404).json({ status: 404, message: 'InterestType not found.', data: categories });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to fetch InterestType' });
+        }
+};
+exports.createNearByPlace = async (req, res) => {
+        try {
+                const { name, description, lat, long, typeId } = req.body;
+                if (!name && !typeId) {
+                        return res.status(201).json({ message: "Provide require fields  name, typeId", status: 404, data: {}, });
+                }
+                const findData = await nearByInterestType.findById({ _id: typeId, type: "NearBy" });
+                if (!findData) {
+                        return res.status(404).json({ status: 404, message: 'NearByType not found' });
+                }
+                let findCompany = await nearByPlaceAndInterest.findOne({ typeId, name, type: "NearBy" });
+                if (findCompany) {
+                        return res.status(409).json({ status: 409, message: 'NearByPlace already successfully', data: findCategory });
+                } else {
+                        if (lat || long) {
+                                coordinates = [parseFloat(lat), parseFloat(long)]
+                                req.body.location = { type: "Point", coordinates };
+                        }
+                        req.body.type = "NearBy";
+                        const newCategory = await nearByPlaceAndInterest.create(req.body);
+                        return res.status(200).json({ status: 200, message: 'NearByPlace created successfully', data: newCategory });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to create Helpline' });
+        }
+};
+exports.getNearByPlaceById = async (req, res) => {
+        try {
+                const _id = req.params.nearByPlaceId;
+                const user = await nearByPlaceAndInterest.findById(_id);
+                if (user) {
+                        return res.status(201).json({ message: "NearByPlace found successfully", status: 200, data: user, });
+                }
+                return res.status(201).json({ message: "NearByPlace not Found", status: 404, data: {}, });
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: "Failed to retrieve NearByPlace" });
+        }
+};
+exports.updateNearByPlace = async (req, res) => {
+        try {
+                const { name, description, lat, long, typeId } = req.body;
+                const nearByPlaceId = req.params.nearByPlaceId;
+                const findData = await nearByPlaceAndInterest.findById({ _id: nearByPlaceId, type: "NearBy" });
+                if (!findData) {
+                        return res.status(201).json({ message: "NearByPlace not Found", status: 404, data: {}, });
+                }
+                if (typeId) {
+                        const findData = await nearByInterestType.findById({ _id: typeId, type: "NearBy" });
+                        if (!findData) {
+                                return res.status(404).json({ status: 404, message: 'NearByType not found' });
+                        }
+                }
+                let findCompany = await nearByPlaceAndInterest.findOne({ _id: { $ne: findData._id }, typeId, name, type: "NearBy", });
+                if (findCompany) {
+                        return res.status(409).json({ status: 409, message: 'NearByPlace already Exit', data: findCategory });
+                } else {
+                        if (lat || long) {
+                                coordinates = [parseFloat(lat), parseFloat(long)]
+                                req.body.location = { type: "Point", coordinates };
+                        }
+                        let data = {
+                                name: name || findData.name,
+                                description: description || findData.description,
+                                typeId: typeId || findData.typeId,
+                                location: location || findData.location,
+                        }
+                        const newCategory = await nearByPlaceAndInterest.findByIdAndUpdate({ _id: findData._id }, { $set: data }, { new: true });
+                        return res.status(200).json({ status: 200, message: 'NearByPlace update successfully', data: newCategory });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to create NearByPlace' });
+        }
+};
+exports.deleteNearByPlace = async (req, res) => {
+        try {
+                const nearByPlaceId = req.params.id;
+                const findData = await nearByPlaceAndInterest.findById({ _id: nearByPlaceId, type: "NearBy" });
+                if (findData) {
+                        const user1 = await nearByPlaceAndInterest.findByIdAndDelete({ _id: user._id });;
+                        if (user1) {
+                                return res.status(201).json({ message: "NearByPlace delete successfully.", status: 200, data: {}, });
+                        }
+                } else {
+                        return res.status(201).json({ message: "NearByPlace not Found", status: 404, data: {}, });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: "Failed to retrieve NearByPlace" });
+        }
+};
+exports.getAllNearByPlace = async (req, res) => {
+        try {
+                const categories = await nearByPlaceAndInterest.find({ type: "NearBy" });
+                if (categories.length > 0) {
+                        return res.status(200).json({ status: 200, message: 'NearByPlace found successfully', data: categories });
+                } else {
+                        return res.status(404).json({ status: 404, message: 'NearByPlace not found.', data: categories });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to fetch NearByPlace' });
+        }
+};
+exports.createPlaceOfInterest = async (req, res) => {
+        try {
+                const { name, description, lat, long, typeId } = req.body;
+                if (!name && !typeId) {
+                        return res.status(201).json({ message: "Provide require fields  name, typeId", status: 404, data: {}, });
+                }
+                const findData = await nearByInterestType.findById({ _id: typeId, type: "Interest" });
+                if (!findData) {
+                        return res.status(404).json({ status: 404, message: 'InterestType not found' });
+                }
+                let findCompany = await nearByPlaceAndInterest.findOne({ typeId, name, type: "Interest" });
+                if (findCompany) {
+                        return res.status(409).json({ status: 409, message: 'NearByPlace already successfully', data: findCategory });
+                } else {
+                        if (lat || long) {
+                                coordinates = [parseFloat(lat), parseFloat(long)]
+                                req.body.location = { type: "Point", coordinates };
+                        }
+                        req.body.type = "Interest";
+                        const newCategory = await nearByPlaceAndInterest.create(req.body);
+                        return res.status(200).json({ status: 200, message: 'NearByPlace created successfully', data: newCategory });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to create Helpline' });
+        }
+};
+exports.getPlaceOfInterestById = async (req, res) => {
+        try {
+                const _id = req.params.nearByPlaceId;
+                const user = await nearByPlaceAndInterest.findById(_id);
+                if (user) {
+                        return res.status(201).json({ message: "NearByPlace found successfully", status: 200, data: user, });
+                }
+                return res.status(201).json({ message: "NearByPlace not Found", status: 404, data: {}, });
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: "Failed to retrieve NearByPlace" });
+        }
+};
+exports.updatePlaceOfInterest = async (req, res) => {
+        try {
+                const { name, description, lat, long, typeId } = req.body;
+                const nearByPlaceId = req.params.nearByPlaceId;
+                const findData = await nearByPlaceAndInterest.findById({ _id: nearByPlaceId, type: "Interest" });
+                if (!findData) {
+                        return res.status(201).json({ message: "NearByPlace not Found", status: 404, data: {}, });
+                }
+                if (typeId) {
+                        const findData = await nearByInterestType.findById({ _id: typeId, type: "Interest" });
+                        if (!findData) {
+                                return res.status(404).json({ status: 404, message: 'NearByType not found' });
+                        }
+                }
+                let findCompany = await nearByPlaceAndInterest.findOne({ _id: { $ne: findData._id }, typeId, name, type: "Interest", });
+                if (findCompany) {
+                        return res.status(409).json({ status: 409, message: 'NearByPlace already Exit', data: findCategory });
+                } else {
+                        if (lat || long) {
+                                coordinates = [parseFloat(lat), parseFloat(long)]
+                                req.body.location = { type: "Point", coordinates };
+                        }
+                        let data = {
+                                name: name || findData.name,
+                                description: description || findData.description,
+                                typeId: typeId || findData.typeId,
+                                location: location || findData.location,
+                        }
+                        const newCategory = await nearByPlaceAndInterest.findByIdAndUpdate({ _id: findData._id }, { $set: data }, { new: true });
+                        return res.status(200).json({ status: 200, message: 'NearByPlace update successfully', data: newCategory });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to create NearByPlace' });
+        }
+};
+exports.deletePlaceOfInterest = async (req, res) => {
+        try {
+                const nearByPlaceId = req.params.id;
+                const findData = await nearByPlaceAndInterest.findById({ _id: nearByPlaceId, type: "Interest" });
+                if (findData) {
+                        const user1 = await nearByPlaceAndInterest.findByIdAndDelete({ _id: findData._id });;
+                        if (user1) {
+                                return res.status(201).json({ message: "NearByPlace delete successfully.", status: 200, data: {}, });
+                        }
+                } else {
+                        return res.status(201).json({ message: "NearByPlace not Found", status: 404, data: {}, });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: "Failed to retrieve NearByPlace" });
+        }
+};
+exports.getAllPlaceOfInterest = async (req, res) => {
+        try {
+                const categories = await nearByPlaceAndInterest.find({ type: "Interest" });
+                if (categories.length > 0) {
+                        return res.status(200).json({ status: 200, message: 'NearByPlace found successfully', data: categories });
+                } else {
+                        return res.status(404).json({ status: 404, message: 'NearByPlace not found.', data: categories });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to fetch NearByPlace' });
         }
 };

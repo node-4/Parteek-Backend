@@ -130,4 +130,24 @@ module.exports = (app) => {
         app.put('/api/v1/Meeting/:meetingId', authJwt.verifyToken, auth.updateMeeting);                                          // edit Meeting
         app.delete("/api/v1/Meeting/:id", authJwt.verifyToken, auth.deleteMeeting);                                              // delete Meeting
         app.get('/api/v1/Meeting', auth.getAllMeeting);                                                                          // all Meeting
+        app.post('/api/v1/NearByType', upload.single('image'), authJwt.verifyToken, auth.createNearByType);                      // add NearByType
+        app.get('/api/v1/NearByType/:nearByTypeId', auth.getNearByTypeById);                                                     // view NearByType
+        app.put('/api/v1/NearByType/:nearByTypeId', upload.single('image'), authJwt.verifyToken, auth.updateNearByType);         // edit NearByType
+        app.delete("/api/v1/NearByType/:id", authJwt.verifyToken, auth.deleteNearByType);                                        // delete NearByType
+        app.get('/api/v1/NearByType', auth.getAllNearByType);                                                                    // all NearByType
+        app.post('/api/v1/InterestType', upload.single('image'), authJwt.verifyToken, auth.createInterestType);                  // add InterestType
+        app.get('/api/v1/InterestType/:interestTypeId', auth.getInterestTypeById);                                               // view InterestType
+        app.put('/api/v1/InterestType/:interestTypeId', upload.single('image'), authJwt.verifyToken, auth.updateInterestType);   // edit InterestType
+        app.delete("/api/v1/InterestType/:id", authJwt.verifyToken, auth.deleteInterestType);                                    // delete InterestType
+        app.get('/api/v1/InterestType', auth.getAllInterestType);                                                                // all InterestType
+        app.post('/api/v1/NearByPlace', authJwt.verifyToken, auth.createNearByPlace);                                             // add NearByPlace
+        app.get('/api/v1/NearByPlace/:nearByPlaceId', auth.getNearByPlaceById);                                                  // view NearByPlace
+        app.put('/api/v1/NearByPlace/:nearByPlaceId', authJwt.verifyToken, auth.updateNearByPlace);                              // edit NearByPlace
+        app.delete("/api/v1/NearByPlace/:id", authJwt.verifyToken, auth.deleteNearByPlace);                                      // delete NearByPlace
+        app.get('/api/v1/NearByPlace', auth.getAllNearByPlace);                                                                  // all NearByPlace
+        app.post('/api/v1/PlaceOfInterest', authJwt.verifyToken, auth.createPlaceOfInterest);                                    // add PlaceOfInterest
+        app.get('/api/v1/PlaceOfInterest/:nearByPlaceId', auth.getPlaceOfInterestById);                                          // view PlaceOfInterest
+        app.put('/api/v1/PlaceOfInterest/:nearByPlaceId', authJwt.verifyToken, auth.updatePlaceOfInterest);                      // edit PlaceOfInterest
+        app.delete("/api/v1/PlaceOfInterest/:id", authJwt.verifyToken, auth.deletePlaceOfInterest);                              // delete PlaceOfInterest
+        app.get('/api/v1/PlaceOfInterest', auth.getAllPlaceOfInterest);                                                          // all PlaceOfInterest
 }
