@@ -1,16 +1,26 @@
+const bcrypt = require('bcrypt');
+const advertisement = require('../model/Advertisement/advertisement');
+const banner = require('../model/Banner/banner');
 const company = require('../model/company/company');
 const CompanyCategory = require('../model/company/companyCategoryModel');
 const delegate = require('../model/Delegate/delegate');
-const exhibitor = require('../model/Exhibitor/Exhibitor');
-const eventSchedule = require('../model/EventSchedule/eventSchedule');
+const dgDesk = require('../model/dgDesk/dgDesk');
 const eventCategory = require('../model/Event/1eventCategory');
 const eventOrganiser = require('../model/Event/2eventOrganiser');
 const event = require('../model/Event/3Event');
 const eventSession = require('../model/Event/4EventSession');
-const Location = require('../model/locationModel');
+const locationFact = require('../model/EventLocationFacts/locationFact');
+const locationFactsBanners = require('../model/EventLocationFacts/locationFactsBanners')
+const eventSchedule = require('../model/EventSchedule/eventSchedule');
+const exhibitor = require('../model/Exhibitor/Exhibitor');
+const feedbackParameter = require('../model/FeedbackParameter/feedbackParameter');
+const helpline = require('../model/Helpline/helpline');
+const meeting = require('../model/Meeting/meeting');
 const paper = require('../model/Speaker/paper');
 const speaker = require('../model/Speaker/speaker');
 const sponser = require('../model/Sponser/sponser');
+const uploadAlbum = require('../model/UploadAlbum/uploadAlbum');
+const Location = require('../model/locationModel');
 const User = require('../model/userModel');
 
 exports.createCompanyCategory = async (req, res) => {
@@ -1529,6 +1539,7 @@ exports.createDelegate = async (req, res) => {
                         } else {
                                 return res.status(201).json({ message: "Profile Pic require", status: 404, data: {}, });
                         }
+                        req.body.delegatePassword = await bcrypt.hash(delegatePassword, 10);
                         const newCategory = await delegate.create(req.body);
                         return res.status(200).json({ status: 200, message: 'Delegate created successfully', data: newCategory });
                 }
@@ -1548,6 +1559,66 @@ exports.getDelegateById = async (req, res) => {
         } catch (error) {
                 console.error(error);
                 return res.status(500).json({ error: "Failed to retrieve Delegate" });
+        }
+};
+exports.updateDelegate = async (req, res) => {
+        try {
+                const { eventId, companyId, delegateCategoryId, email, otherEmail, delegateTitle, firstName, middleName, lastName, delegateLoginId, delegatePassword, address1, address2, countryId, cityId, pinCode, mobileNumber, profilePic, designation, aboutMySelf, showEmail, showContactNo, openForAppointment, isPublished, sendMail, payment, receiptNo, sponsorer, currency, seminarFee, remarks, registrationNo, showInOrder } = req.body;
+                const delegateId = req.params.delegateId;
+                const findData = await delegate.findById(delegateId); if (!findData) { return res.status(201).json({ message: "Delegate not Found", status: 404, data: {}, }); }
+                if (eventId) { const findEvent = await event.findById(eventId); if (!findEvent) { return res.status(404).json({ status: 404, message: 'Event not found' }); } }
+                if (companyId) { const findCompany = await company.findById(companyId); if (!findCompany) { return res.status(404).json({ status: 404, message: 'company not found' }); } }
+                if (delegateCategoryId) { const findDelegateCategory = await CompanyCategory.findById(delegateCategoryId); if (!findDelegateCategory) { return res.status(404).json({ status: 404, message: 'Delegate Category not found' }); } }
+                if (cityId) { const findstateCityId = await Location.findById(cityId); if (!findstateCityId) { return res.status(404).json({ status: 404, message: 'StateCity not found' }); } }
+                if (countryId) { const findCountry = await Location.findById(countryId); if (!findCountry) { return res.status(404).json({ status: 404, message: 'country not found' }); } }
+                let findDelegate = await delegate.findOne({ _id: { $ne: findData._id }, eventId, companyId, delegateCategoryId, email, delegateTitle, firstName, delegateLoginId, address1 });
+                if (findDelegate) { return res.status(409).json({ status: 409, message: 'Delegate already successfully', data: findCategory }); } else {
+                        if (req.file) { req.body.profilePic = req.file.path } else { req.body.profilePic = findData.profilePic };
+                        if (delegatePassword) {
+                                req.body.delegatePassword = await bcrypt.hash(delegatePassword, 10);
+                        }
+                        let data = {
+                                eventId: eventId || findData.eventId,
+                                companyId: companyId || findData.companyId,
+                                delegateCategoryId: delegateCategoryId || findData.delegateCategoryId,
+                                email: email || findData.email,
+                                otherEmail: otherEmail || findData.otherEmail,
+                                delegateTitle: delegateTitle || findData.delegateTitle,
+                                firstName: firstName || findData.firstName,
+                                middleName: middleName || findData.middleName,
+                                lastName: lastName || findData.lastName,
+                                delegateLoginId: delegateLoginId || findData.delegateLoginId,
+                                delegatePassword: req.body.delegatePassword || findData.delegatePassword,
+                                address1: address1 || findData.address1,
+                                address2: address2 || findData.address2,
+                                countryId: countryId || findData.countryId,
+                                cityId: cityId || findData.cityId,
+                                pinCode: pinCode || findData.pinCode,
+                                mobileNumber: mobileNumber || findData.mobileNumber,
+                                programWebUrl: programWebUrl || findData.programWebUrl,
+                                profilePic: req.body.profilePic,
+                                designation: designation || findData.designation,
+                                aboutMySelf: aboutMySelf || findData.aboutMySelf,
+                                showEmail: showEmail || findData.showEmail,
+                                showContactNo: showContactNo || findData.showContactNo,
+                                openForAppointment: openForAppointment || findData.openForAppointment,
+                                isPublished: isPublished || findData.isPublished,
+                                sendMail: sendMail || findData.sendMail,
+                                payment: payment || findData.payment,
+                                receiptNo: receiptNo || findData.receiptNo,
+                                sponsorer: sponsorer || findData.sponsorer,
+                                currency: currency || findData.currency,
+                                seminarFee: seminarFee || findData.seminarFee,
+                                remarks: remarks || findData.remarks,
+                                registrationNo: registrationNo || findData.registrationNo,
+                                showInOrder: showInOrder || findData.showInOrder,
+                        }
+                        const newCategory = await delegate.findByIdAndUpdate({ _id: findData._id }, { $set: data }, { new: true });
+                        return res.status(200).json({ status: 200, message: 'Delegate update successfully', data: newCategory });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to create Delegate' });
         }
 };
 exports.deleteDelegate = async (req, res) => {
@@ -1578,5 +1649,1317 @@ exports.getAllDelegate = async (req, res) => {
         } catch (error) {
                 console.error(error);
                 return res.status(500).json({ error: 'Failed to fetch Delegate' });
+        }
+};
+exports.createHelpline = async (req, res) => {
+        try {
+                const { eventId, helplineNo, helplineTitle, lat, long, description, address, fromDate, toDate, isPublished, showInOrder } = req.body;
+                if (!eventId && !helplineNo && !helplineTitle) {
+                        return res.status(201).json({ message: "Provide require fields  eventId, helplineNo, helplineTitle", status: 404, data: {}, });
+                }
+                const findEvent = await event.findById({ _id: eventId });
+                if (!findEvent) {
+                        return res.status(404).json({ status: 404, message: 'event not found' });
+                }
+                let findCompany = await helpline.findOne({ eventId, helplineNo, helplineTitle });
+                if (findCompany) {
+                        return res.status(409).json({ status: 409, message: 'Helpline already successfully', data: findCategory });
+                } else {
+                        if (lat || long) {
+                                coordinates = [parseFloat(lat), parseFloat(long)]
+                                req.body.location = { type: "Point", coordinates };
+                        }
+                        const d = new Date(fromDate);
+                        req.body.fromDate = d.toISOString();
+                        const d1 = new Date(toDate);
+                        req.body.toDate = d1.toISOString();
+                        const newCategory = await helpline.create(req.body);
+                        return res.status(200).json({ status: 200, message: 'Helpline created successfully', data: newCategory });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to create Helpline' });
+        }
+};
+exports.getHelplineById = async (req, res) => {
+        try {
+                const _id = req.params.helplineId;
+                const user = await helpline.findById(_id);
+                if (user) {
+                        return res.status(201).json({ message: "Helpline found successfully", status: 200, data: user, });
+                }
+                return res.status(201).json({ message: "Helpline not Found", status: 404, data: {}, });
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: "Failed to retrieve Helpline" });
+        }
+};
+exports.updateHelpline = async (req, res) => {
+        try {
+                const { eventId, helplineNo, helplineTitle, lat, long, description, address, fromDate, toDate, isPublished, showInOrder } = req.body;
+                const helplineId = req.params.helplineId;
+                const findData = await helpline.findById(helplineId);
+                if (!findData) {
+                        return res.status(201).json({ message: "Helpline not Found", status: 404, data: {}, });
+                }
+                if (eventId) {
+                        const findEvent = await event.findById(eventId);
+                        if (!findEvent) {
+                                return res.status(404).json({ status: 404, message: 'Event not found' });
+                        }
+                }
+                let findCompany = await helpline.findOne({ _id: { $ne: findData._id }, eventId, helplineNo, helplineTitle, });
+                if (findCompany) {
+                        return res.status(409).json({ status: 409, message: 'Helpline already Exit', data: findCategory });
+                } else {
+                        if (fromDate) {
+                                const d = new Date(fromDate);
+                                req.body.fromDate = d.toISOString();
+                        }
+                        if (toDate) {
+                                const d1 = new Date(toDate);
+                                req.body.toDate = d1.toISOString();
+                        }
+                        if (lat || long) {
+                                coordinates = [parseFloat(lat), parseFloat(long)]
+                                req.body.location = { type: "Point", coordinates };
+                        }
+                        let data = {
+                                eventId: eventId || findData.eventId,
+                                helplineNo: helplineNo || findData.helplineNo,
+                                helplineTitle: helplineTitle || findData.helplineTitle,
+                                description: description || findData.description,
+                                address: address || findData.address,
+                                fromDate: req.body.fromDate || findData.fromDate,
+                                toDate: req.body.toDate || findData.toDate,
+                                isPublished: isPublished || findData.isPublished,
+                                showInOrder: showInOrder || findData.showInOrder,
+                        }
+                        const newCategory = await helpline.findByIdAndUpdate({ _id: findData._id }, { $set: data }, { new: true });
+                        return res.status(200).json({ status: 200, message: 'Helpline update successfully', data: newCategory });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to create Helpline' });
+        }
+};
+exports.deleteHelpline = async (req, res) => {
+        try {
+                const helplineId = req.params.id;
+                const user = await helpline.findById(helplineId);
+                if (user) {
+                        const user1 = await helpline.findByIdAndDelete({ _id: user._id });;
+                        if (user1) {
+                                return res.status(201).json({ message: "Helpline delete successfully.", status: 200, data: {}, });
+                        }
+                } else {
+                        return res.status(201).json({ message: "Helpline not Found", status: 404, data: {}, });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: "Failed to retrieve Helpline" });
+        }
+};
+exports.getAllHelpline = async (req, res) => {
+        try {
+                const categories = await helpline.find();
+                if (categories.length > 0) {
+                        return res.status(200).json({ status: 200, message: 'Helpline found successfully', data: categories });
+                } else {
+                        return res.status(404).json({ status: 404, message: 'Helpline not found.', data: categories });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to fetch Helpline' });
+        }
+};
+exports.createFeedbackParameter = async (req, res) => {
+        try {
+                const { eventId, feedbackParamTitle, feedbackParamDesc, isPublished, showInOrder } = req.body;
+                if (!eventId && !feedbackParamTitle) {
+                        return res.status(201).json({ message: "Provide require fields  eventId, feedbackParamTitle", status: 404, data: {}, });
+                }
+                const findEvent = await event.findById({ _id: eventId });
+                if (!findEvent) {
+                        return res.status(404).json({ status: 404, message: 'event not found' });
+                }
+                let findCompany = await feedbackParameter.findOne({ eventId, feedbackParamTitle });
+                if (findCompany) {
+                        return res.status(409).json({ status: 409, message: 'FeedbackParameter already successfully', data: findCategory });
+                } else {
+                        const newCategory = await feedbackParameter.create(req.body);
+                        return res.status(200).json({ status: 200, message: 'FeedbackParameter created successfully', data: newCategory });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to create FeedbackParameter' });
+        }
+};
+exports.getFeedbackParameterById = async (req, res) => {
+        try {
+                const _id = req.params.feedbackParameterId;
+                const user = await feedbackParameter.findById(_id);
+                if (user) {
+                        return res.status(201).json({ message: "FeedbackParameter found successfully", status: 200, data: user, });
+                }
+                return res.status(201).json({ message: "FeedbackParameter not Found", status: 404, data: {}, });
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: "Failed to retrieve FeedbackParameter" });
+        }
+};
+exports.updateFeedbackParameter = async (req, res) => {
+        try {
+                const { eventId, feedbackParamTitle, feedbackParamDesc, isPublished, showInOrder } = req.body;
+                const feedbackParameterId = req.params.feedbackParameterId;
+                const findData = await feedbackParameter.findById(feedbackParameterId);
+                if (!findData) {
+                        return res.status(201).json({ message: "FeedbackParameter not Found", status: 404, data: {}, });
+                }
+                if (eventId) {
+                        const findEvent = await event.findById(eventId);
+                        if (!findEvent) {
+                                return res.status(404).json({ status: 404, message: 'Event not found' });
+                        }
+                }
+                let findCompany = await feedbackParameter.findOne({ _id: { $ne: findData._id }, eventId, feedbackParamTitle, });
+                if (findCompany) {
+                        return res.status(409).json({ status: 409, message: 'FeedbackParameter already Exit', data: findCategory });
+                } else {
+                        let data = {
+                                eventId: eventId || findData.eventId,
+                                feedbackParamTitle: feedbackParamTitle || findData.feedbackParamTitle,
+                                feedbackParamDesc: feedbackParamDesc || findData.feedbackParamDesc,
+                                isPublished: isPublished || findData.isPublished,
+                                showInOrder: showInOrder || findData.showInOrder,
+                        }
+                        const newCategory = await feedbackParameter.findByIdAndUpdate({ _id: findData._id }, { $set: data }, { new: true });
+                        return res.status(200).json({ status: 200, message: 'FeedbackParameter update successfully', data: newCategory });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to create FeedbackParameter' });
+        }
+};
+exports.deleteFeedbackParameter = async (req, res) => {
+        try {
+                const feedbackParameterId = req.params.id;
+                const user = await feedbackParameter.findById(feedbackParameterId);
+                if (user) {
+                        const user1 = await feedbackParameter.findByIdAndDelete({ _id: user._id });;
+                        if (user1) {
+                                return res.status(201).json({ message: "FeedbackParameter delete successfully.", status: 200, data: {}, });
+                        }
+                } else {
+                        return res.status(201).json({ message: "FeedbackParameter not Found", status: 404, data: {}, });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: "Failed to retrieve FeedbackParameter" });
+        }
+};
+exports.getAllFeedbackParameter = async (req, res) => {
+        try {
+                const categories = await feedbackParameter.find();
+                if (categories.length > 0) {
+                        return res.status(200).json({ status: 200, message: 'FeedbackParameter found successfully', data: categories });
+                } else {
+                        return res.status(404).json({ status: 404, message: 'FeedbackParameter not found.', data: categories });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to fetch FeedbackParameter' });
+        }
+};
+exports.createAdvertisement = async (req, res) => {
+        try {
+                const { eventId, shortName, adTitle, lat, long, address, adLogoPath, adDescription, adCity, adAddress, adFromDate, adToDate, adWebUrl, contactPerson, contactPersonNo, isPublished, showInOrder, } = req.body;
+                if (!eventId && !adTitle) {
+                        return res.status(201).json({ message: "Provide require fields  eventId, adTitle", status: 404, data: {}, });
+                }
+                const findEvent = await event.findById({ _id: eventId });
+                if (!findEvent) {
+                        return res.status(404).json({ status: 404, message: 'event not found' });
+                }
+                const findCity = await Location.findById(adCity);
+                if (!findCity) {
+                        return res.status(404).json({ status: 404, message: 'Ad city not found' });
+                }
+                let findCompany = await advertisement.findOne({ eventId, adTitle });
+                if (findCompany) {
+                        return res.status(409).json({ status: 409, message: 'Advertisement already successfully', data: findCompany });
+                } else {
+                        if (lat || long) {
+                                coordinates = [parseFloat(lat), parseFloat(long)]
+                                req.body.location = { type: "Point", coordinates };
+                        }
+                        const newCategory = await advertisement.create(req.body);
+                        return res.status(200).json({ status: 200, message: 'Advertisement created successfully', data: newCategory });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to create Advertisement' });
+        }
+};
+exports.getAdvertisementById = async (req, res) => {
+        try {
+                const _id = req.params.advertisementId;
+                const user = await advertisement.findById(_id);
+                if (user) {
+                        return res.status(201).json({ message: "Advertisement found successfully", status: 200, data: user, });
+                }
+                return res.status(201).json({ message: "Advertisement not Found", status: 404, data: {}, });
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: "Failed to retrieve Advertisement" });
+        }
+};
+exports.updateAdvertisement = async (req, res) => {
+        try {
+                const { eventId, shortName, adTitle, lat, long, address, adLogoPath, adDescription, adCity, adAddress, adFromDate, adToDate, adWebUrl, contactPerson, contactPersonNo, isPublished, showInOrder } = req.body;
+                const advertisementId = req.params.advertisementId;
+                const findData = await advertisement.findById(advertisementId);
+                if (!findData) {
+                        return res.status(201).json({ message: "Advertisement not Found", status: 404, data: {}, });
+                }
+                if (eventId) {
+                        const findEvent = await event.findById(eventId);
+                        if (!findEvent) {
+                                return res.status(404).json({ status: 404, message: 'Event not found' });
+                        }
+                }
+                if (adCity) {
+                        const findCity = await Location.findById(adCity);
+                        if (!findCity) {
+                                return res.status(404).json({ status: 404, message: 'Ad city not found' });
+                        }
+                }
+                let findCompany = await advertisement.findOne({ _id: { $ne: findData._id }, eventId, adTitle, });
+                if (findCompany) {
+                        return res.status(409).json({ status: 409, message: 'Advertisement already Exit', data: findCompany });
+                } else {
+                        if (lat || long) {
+                                coordinates = [parseFloat(lat), parseFloat(long)]
+                                req.body.location = { type: "Point", coordinates };
+                        }
+                        let data = {
+                                eventId: eventId || findData.eventId,
+                                shortName: shortName || findData.shortName,
+                                adTitle: adTitle || findData.adTitle,
+                                address: address || findData.address,
+                                adLogoPath: adLogoPath || findData.adLogoPath,
+                                adDescription: adDescription || findData.adDescription,
+                                adCity: adCity || findData.adCity,
+                                adAddress: adAddress || findData.adAddress,
+                                adFromDate: adFromDate || findData.adFromDate,
+                                adToDate: adToDate || findData.adToDate,
+                                adWebUrl: adWebUrl || findData.adWebUrl,
+                                contactPerson: contactPerson || findData.contactPerson,
+                                contactPersonNo: contactPersonNo || findData.contactPersonNo,
+                                isPublished: isPublished || findData.isPublished,
+                                showInOrder: showInOrder || findData.showInOrder,
+                                location: req.body.location || findData.location
+                        }
+                        const newCategory = await advertisement.findByIdAndUpdate({ _id: findData._id }, { $set: data }, { new: true });
+                        return res.status(200).json({ status: 200, message: 'Advertisement update successfully', data: newCategory });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to create Advertisement' });
+        }
+};
+exports.deleteAdvertisement = async (req, res) => {
+        try {
+                const advertisementId = req.params.id;
+                const user = await advertisement.findById(advertisementId);
+                if (user) {
+                        const user1 = await advertisement.findByIdAndDelete({ _id: user._id });;
+                        if (user1) {
+                                return res.status(201).json({ message: "Advertisement delete successfully.", status: 200, data: {}, });
+                        }
+                } else {
+                        return res.status(201).json({ message: "Advertisement not Found", status: 404, data: {}, });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: "Failed to retrieve Advertisement" });
+        }
+};
+exports.getAllAdvertisement = async (req, res) => {
+        try {
+                const categories = await advertisement.find();
+                if (categories.length > 0) {
+                        return res.status(200).json({ status: 200, message: 'Advertisement found successfully', data: categories });
+                } else {
+                        return res.status(404).json({ status: 404, message: 'Advertisement not found.', data: categories });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to fetch Advertisement' });
+        }
+};
+exports.createUploadAlbum = async (req, res) => {
+        try {
+                const { eventId, documentCategory, title, description, displayImage, isPublished, showInOrder, } = req.body;
+                if (!eventId && !documentCategory) {
+                        return res.status(201).json({ message: "Provide require fields  eventId, documentCategory", status: 404, data: {}, });
+                }
+                const findEvent = await event.findById(eventId);
+                if (!findEvent) {
+                        return res.status(404).json({ status: 404, message: 'Event not found' });
+                }
+                let findUploadAlbum = await uploadAlbum.findOne({ eventId, documentCategory });
+                if (findUploadAlbum) {
+                        return res.status(409).json({ status: 409, message: 'Upload Album already successfully', data: findUploadAlbum });
+                } else {
+                        if (req.file) {
+                                req.body.displayImage = req.file.path
+                        } else {
+                                return res.status(201).json({ message: "Display image require", status: 404, data: {}, });
+                        }
+                        const newCategory = await uploadAlbum.create(req.body);
+                        return res.status(200).json({ status: 200, message: 'Upload Album created successfully', data: newCategory });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to create Upload Album' });
+        }
+};
+exports.getUploadAlbumById = async (req, res) => {
+        try {
+                const uploadAlbumId = req.params.uploadAlbumId;
+                const user = await uploadAlbum.findById(uploadAlbumId);
+                if (user) {
+                        return res.status(201).json({ message: "UploadAlbum found successfully", status: 200, data: user, });
+                }
+                return res.status(201).json({ message: "UploadAlbum not Found", status: 404, data: {}, });
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: "Failed to retrieve UploadAlbum" });
+        }
+};
+exports.updateUploadAlbum = async (req, res) => {
+        try {
+                const { eventId, documentCategory, title, description, displayImage, isPublished, showInOrder, } = req.body;
+                const uploadAlbumId = req.params.uploadAlbumId;
+                const findData = await uploadAlbum.findById(uploadAlbumId);
+                if (!findData) {
+                        return res.status(201).json({ message: "Upload Album not Found", status: 404, data: {}, });
+                }
+                if (eventId) {
+                        const findEvent = await event.findById(eventId);
+                        if (!findEvent) {
+                                return res.status(404).json({ status: 404, message: 'Event not found' });
+                        }
+                }
+                let findCompany = await uploadAlbum.findOne({ _id: { $ne: findData._id }, eventId, documentCategory, });
+                if (findCompany) {
+                        return res.status(409).json({ status: 409, message: 'Upload Album already Exit', data: findCompany });
+                } else {
+                        if (req.file) {
+                                req.body.displayImage = req.file.path;
+                        } else {
+                                req.body.displayImage = findData.displayImage;
+                        }
+                        let data = {
+                                eventId: eventId || findData.eventId,
+                                documentCategory: documentCategory || findData.documentCategory,
+                                title: title || findData.title,
+                                description: description || findData.description,
+                                displayImage: req.body.displayImage,
+                                isPublished: isPublished || findData.isPublished,
+                                showInOrder: showInOrder || findData.showInOrder,
+                        }
+                        const newCategory = await uploadAlbum.findByIdAndUpdate({ _id: findData._id }, { $set: data }, { new: true });
+                        return res.status(200).json({ status: 200, message: 'Upload Album update successfully', data: newCategory });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to create UploadAlbum' });
+        }
+};
+exports.deleteUploadAlbum = async (req, res) => {
+        try {
+                const uploadAlbumId = req.params.id;
+                const user = await uploadAlbum.findById(uploadAlbumId);
+                if (user) {
+                        const user1 = await uploadAlbum.findByIdAndDelete({ _id: user._id });;
+                        if (user1) {
+                                return res.status(201).json({ message: "UploadAlbum delete successfully.", status: 200, data: {}, });
+                        }
+                } else {
+                        return res.status(201).json({ message: "UploadAlbum not Found", status: 404, data: {}, });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: "Failed to retrieve UploadAlbum" });
+        }
+};
+exports.getAllUploadAlbum = async (req, res) => {
+        try {
+                const categories = await uploadAlbum.find();
+                if (categories.length > 0) {
+                        return res.status(200).json({ status: 200, message: 'UploadAlbum found successfully', data: categories });
+                } else {
+                        return res.status(404).json({ status: 404, message: 'UploadAlbum not found.', data: categories });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to fetch UploadAlbum' });
+        }
+};
+exports.createBanner = async (req, res) => {
+        try {
+                const { eventId, bannerTitle, bannerDescription, bannerImage, bannerRedirectUrl, isPublished, showInOrder } = req.body;
+                if (!eventId && !bannerTitle && !showInOrder) {
+                        return res.status(201).json({ message: "Provide require fields  eventId, bannerTitle, showInOrder", status: 404, data: {}, });
+                }
+                const findEvent = await event.findById(eventId);
+                if (!findEvent) {
+                        return res.status(404).json({ status: 404, message: 'Event not found' });
+                }
+                let findBanner = await banner.findOne({ eventId, bannerTitle });
+                if (findBanner) {
+                        return res.status(409).json({ status: 409, message: 'Banner already successfully', data: findBanner });
+                } else {
+                        if (req.file) {
+                                req.body.bannerImage = req.file.path
+                        } else {
+                                return res.status(201).json({ message: "Banner Image require", status: 404, data: {}, });
+                        }
+                        const newCategory = await banner.create(req.body);
+                        return res.status(200).json({ status: 200, message: 'Banner created successfully', data: newCategory });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to create Banner' });
+        }
+};
+exports.getBannerById = async (req, res) => {
+        try {
+                const bannerId = req.params.bannerId;
+                const user = await banner.findById(bannerId);
+                if (user) {
+                        return res.status(201).json({ message: "Banner found successfully", status: 200, data: user, });
+                }
+                return res.status(201).json({ message: "Banner not Found", status: 404, data: {}, });
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: "Failed to retrieve Banner" });
+        }
+};
+exports.updateBanner = async (req, res) => {
+        try {
+                const { eventId, bannerTitle, bannerDescription, bannerImage, bannerRedirectUrl, isPublished, showInOrder } = req.body;
+                const bannerId = req.params.bannerId;
+                const findData = await banner.findById(bannerId);
+                if (!findData) {
+                        return res.status(201).json({ message: "Banner not Found", status: 404, data: {}, });
+                }
+                if (eventId) {
+                        const findEvent = await event.findById(eventId);
+                        if (!findEvent) {
+                                return res.status(404).json({ status: 404, message: 'Event not found' });
+                        }
+                }
+                let findCompany = await banner.findOne({ _id: { $ne: findData._id }, eventId, bannerTitle, });
+                if (findCompany) {
+                        return res.status(409).json({ status: 409, message: 'Banner already Exit', data: findCompany });
+                } else {
+                        if (req.file) {
+                                req.body.bannerImage = req.file.path;
+                        } else {
+                                req.body.bannerImage = findData.bannerImage;
+                        }
+                        let data = {
+                                eventId: eventId || findData.eventId,
+                                bannerTitle: bannerTitle || findData.bannerTitle,
+                                bannerDescription: bannerDescription || findData.bannerDescription,
+                                bannerImage: req.body.bannerImage,
+                                bannerRedirectUrl: bannerRedirectUrl || findData.bannerRedirectUrl,
+                                isPublished: isPublished || findData.isPublished,
+                                showInOrder: showInOrder || findData.showInOrder,
+                        }
+                        const newCategory = await banner.findByIdAndUpdate({ _id: findData._id }, { $set: data }, { new: true });
+                        return res.status(200).json({ status: 200, message: 'Banner update successfully', data: newCategory });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to create Banner' });
+        }
+};
+exports.deleteBanner = async (req, res) => {
+        try {
+                const bannerId = req.params.id;
+                const user = await banner.findById(bannerId);
+                if (user) {
+                        const user1 = await banner.findByIdAndDelete({ _id: user._id });;
+                        if (user1) {
+                                return res.status(201).json({ message: "Banner delete successfully.", status: 200, data: {}, });
+                        }
+                } else {
+                        return res.status(201).json({ message: "Banner not Found", status: 404, data: {}, });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: "Failed to retrieve Banner" });
+        }
+};
+exports.getAllBanner = async (req, res) => {
+        try {
+                const categories = await banner.find();
+                if (categories.length > 0) {
+                        return res.status(200).json({ status: 200, message: 'Banner found successfully', data: categories });
+                } else {
+                        return res.status(404).json({ status: 404, message: 'Banner not found.', data: categories });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to fetch Banner' });
+        }
+};
+exports.createDgDesk = async (req, res) => {
+        try {
+                const { eventId, message } = req.body;
+                if (!eventId && !message) {
+                        return res.status(201).json({ message: "Provide require fields  eventId, message", status: 404, data: {}, });
+                }
+                const findEvent = await event.findById(eventId);
+                if (!findEvent) {
+                        return res.status(404).json({ status: 404, message: 'Event not found' });
+                }
+                let findDgDesk = await dgDesk.findOne({ eventId, message, type: "DG" });
+                if (findDgDesk) {
+                        return res.status(409).json({ status: 409, message: 'DgDesk already successfully', data: findDgDesk });
+                } else {
+                        req.body.type = "DG";
+                        const newCategory = await dgDesk.create(req.body);
+                        return res.status(200).json({ status: 200, message: 'DgDesk created successfully', data: newCategory });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to create DgDesk' });
+        }
+};
+exports.getDgDeskById = async (req, res) => {
+        try {
+                const dgDeskId = req.params.dgDeskId;
+                const user = await dgDesk.findById({ _id: dgDeskId, type: "DG" });
+                if (user) {
+                        return res.status(201).json({ message: "DgDesk found successfully", status: 200, data: user, });
+                }
+                return res.status(201).json({ message: "DgDesk not Found", status: 404, data: {}, });
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: "Failed to retrieve DgDesk" });
+        }
+};
+exports.updateDgDesk = async (req, res) => {
+        try {
+                const { eventId, message } = req.body;
+                const dgDeskId = req.params.dgDeskId;
+                const findData = await dgDesk.findById({ _id: dgDeskId, type: "DG" });
+                if (!findData) {
+                        return res.status(201).json({ message: "DgDesk not Found", status: 404, data: {}, });
+                }
+                if (eventId) {
+                        const findEvent = await event.findById(eventId);
+                        if (!findEvent) {
+                                return res.status(404).json({ status: 404, message: 'Event not found' });
+                        }
+                }
+                let findCompany = await dgDesk.findOne({ _id: { $ne: findData._id }, eventId, message, type: "DG" });
+                if (findCompany) {
+                        return res.status(409).json({ status: 409, message: 'DgDesk already Exit', data: findCompany });
+                } else {
+                        let data = {
+                                eventId: eventId || findData.eventId,
+                                message: message || findData.message,
+                                type: "DG"
+                        }
+                        const newCategory = await dgDesk.findByIdAndUpdate({ _id: findData._id }, { $set: data }, { new: true });
+                        return res.status(200).json({ status: 200, message: 'DgDesk update successfully', data: newCategory });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to create DgDesk' });
+        }
+};
+exports.deleteDgDesk = async (req, res) => {
+        try {
+                const dgDeskId = req.params.id;
+                const user = await dgDesk.findById({ _id: dgDeskId, type: "DG" });
+                if (user) {
+                        const user1 = await dgDesk.findByIdAndDelete({ _id: user._id });;
+                        if (user1) {
+                                return res.status(201).json({ message: "DgDesk delete successfully.", status: 200, data: {}, });
+                        }
+                } else {
+                        return res.status(201).json({ message: "DgDesk not Found", status: 404, data: {}, });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: "Failed to retrieve DgDesk" });
+        }
+};
+exports.getAllDgDesk = async (req, res) => {
+        try {
+                const categories = await dgDesk.find({ type: "DG" });
+                if (categories.length > 0) {
+                        return res.status(200).json({ status: 200, message: 'DgDesk found successfully', data: categories });
+                } else {
+                        return res.status(404).json({ status: 404, message: 'DgDesk not found.', data: categories });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to fetch DgDesk' });
+        }
+};
+exports.createLocationFact = async (req, res) => {
+        try {
+                const { eventId, title, description, isPublished, showInOrder } = req.body;
+                if (!eventId && !title && !description) {
+                        return res.status(201).json({ message: "Provide require fields  eventId, title, description", status: 404, data: {}, });
+                }
+                const findEvent = await event.findById(eventId);
+                if (!findEvent) {
+                        return res.status(404).json({ status: 404, message: 'Event not found' });
+                }
+                let findLocationFact = await locationFact.findOne({ eventId, title, description });
+                if (findLocationFact) {
+                        return res.status(409).json({ status: 409, message: 'Location Fact already successfully', data: findLocationFact });
+                } else {
+                        const newCategory = await locationFact.create(req.body);
+                        return res.status(200).json({ status: 200, message: 'Location Fact created successfully', data: newCategory });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to create Location Fact' });
+        }
+};
+exports.getLocationFactById = async (req, res) => {
+        try {
+                const locationFactId = req.params.locationFactId;
+                const user = await locationFact.findById(locationFactId);
+                if (user) {
+                        return res.status(201).json({ message: "LocationFact found successfully", status: 200, data: user, });
+                }
+                return res.status(201).json({ message: "LocationFact not Found", status: 404, data: {}, });
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: "Failed to retrieve LocationFact" });
+        }
+};
+exports.updateLocationFact = async (req, res) => {
+        try {
+                const { eventId, title, description, isPublished, showInOrder, } = req.body;
+                const locationFactId = req.params.locationFactId;
+                const findData = await locationFact.findById(locationFactId);
+                if (!findData) {
+                        return res.status(201).json({ message: "Location Fact not Found", status: 404, data: {}, });
+                }
+                if (eventId) {
+                        const findEvent = await event.findById(eventId);
+                        if (!findEvent) {
+                                return res.status(404).json({ status: 404, message: 'Event not found' });
+                        }
+                }
+                let findCompany = await locationFact.findOne({ _id: { $ne: findData._id }, eventId, title, description, });
+                if (findCompany) {
+                        return res.status(409).json({ status: 409, message: 'Location Fact already Exit', data: findCompany });
+                } else {
+                        if (req.file) {
+                                req.body.displayImage = req.file.path;
+                        } else {
+                                req.body.displayImage = findData.displayImage;
+                        }
+                        let data = {
+                                eventId: eventId || findData.eventId,
+                                title: title || findData.title,
+                                description: description || findData.description,
+                                isPublished: isPublished || findData.isPublished,
+                                showInOrder: showInOrder || findData.showInOrder,
+                        }
+                        const newCategory = await locationFact.findByIdAndUpdate({ _id: findData._id }, { $set: data }, { new: true });
+                        return res.status(200).json({ status: 200, message: 'Location Fact update successfully', data: newCategory });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to create LocationFact' });
+        }
+};
+exports.deleteLocationFact = async (req, res) => {
+        try {
+                const locationFactId = req.params.id;
+                const user = await locationFact.findById(locationFactId);
+                if (user) {
+                        const user1 = await locationFact.findByIdAndDelete({ _id: user._id });;
+                        if (user1) {
+                                return res.status(201).json({ message: "LocationFact delete successfully.", status: 200, data: {}, });
+                        }
+                } else {
+                        return res.status(201).json({ message: "LocationFact not Found", status: 404, data: {}, });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: "Failed to retrieve LocationFact" });
+        }
+};
+exports.getAllLocationFact = async (req, res) => {
+        try {
+                const categories = await locationFact.find();
+                if (categories.length > 0) {
+                        return res.status(200).json({ status: 200, message: 'LocationFact found successfully', data: categories });
+                } else {
+                        return res.status(404).json({ status: 404, message: 'LocationFact not found.', data: categories });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to fetch LocationFact' });
+        }
+};
+exports.createLocationFactsBanner = async (req, res) => {
+        try {
+                const { eventId, bannerTitle, bannerDescr, bannerImage, bannerRedirectUrl, isPublished, showInOrder } = req.body;
+                if (!eventId && !bannerTitle && !showInOrder) {
+                        return res.status(201).json({ message: "Provide require fields  eventId, bannerTitle, showInOrder", status: 404, data: {}, });
+                }
+                const findEvent = await event.findById(eventId);
+                if (!findEvent) {
+                        return res.status(404).json({ status: 404, message: 'Event not found' });
+                }
+                let findBanner = await locationFactsBanners.findOne({ eventId, bannerTitle });
+                if (findBanner) {
+                        return res.status(409).json({ status: 409, message: 'LocationFactsBanner already successfully', data: findBanner });
+                } else {
+                        if (req.file) {
+                                req.body.bannerImage = req.file.path
+                        } else {
+                                return res.status(201).json({ message: "LocationFactsBanner Image require", status: 404, data: {}, });
+                        }
+                        const newCategory = await locationFactsBanners.create(req.body);
+                        return res.status(200).json({ status: 200, message: 'LocationFactsBanner created successfully', data: newCategory });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to create LocationFactsBanner' });
+        }
+};
+exports.getLocationFactsBannerById = async (req, res) => {
+        try {
+                const bannerId = req.params.bannerId;
+                const user = await locationFactsBanners.findById(bannerId);
+                if (user) {
+                        return res.status(201).json({ message: "LocationFactsBanner found successfully", status: 200, data: user, });
+                }
+                return res.status(201).json({ message: "LocationFactsBanner not Found", status: 404, data: {}, });
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: "Failed to retrieve LocationFactsBanner" });
+        }
+};
+exports.updateLocationFactsBanner = async (req, res) => {
+        try {
+                const { eventId, bannerTitle, bannerDescr, bannerImage, bannerRedirectUrl, isPublished, showInOrder } = req.body;
+                const bannerId = req.params.bannerId;
+                const findData = await locationFactsBanners.findById(bannerId);
+                if (!findData) {
+                        return res.status(201).json({ message: "LocationFactsBanner not Found", status: 404, data: {}, });
+                }
+                if (eventId) {
+                        const findEvent = await event.findById(eventId);
+                        if (!findEvent) {
+                                return res.status(404).json({ status: 404, message: 'Event not found' });
+                        }
+                }
+                let findCompany = await locationFactsBanners.findOne({ _id: { $ne: findData._id }, eventId, bannerTitle, });
+                if (findCompany) {
+                        return res.status(409).json({ status: 409, message: 'LocationFactsBanner already Exit', data: findCompany });
+                } else {
+                        if (req.file) {
+                                req.body.bannerImage = req.file.path;
+                        } else {
+                                req.body.bannerImage = findData.bannerImage;
+                        }
+                        let data = {
+                                eventId: eventId || findData.eventId,
+                                bannerTitle: bannerTitle || findData.bannerTitle,
+                                bannerDescr: bannerDescr || findData.bannerDescr,
+                                bannerImage: req.body.bannerImage,
+                                bannerRedirectUrl: bannerRedirectUrl || findData.bannerRedirectUrl,
+                                isPublished: isPublished || findData.isPublished,
+                                showInOrder: showInOrder || findData.showInOrder,
+                        }
+                        const newCategory = await locationFactsBanners.findByIdAndUpdate({ _id: findData._id }, { $set: data }, { new: true });
+                        return res.status(200).json({ status: 200, message: 'LocationFactsBanner update successfully', data: newCategory });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to create LocationFactsBanner' });
+        }
+};
+exports.deleteLocationFactsBanner = async (req, res) => {
+        try {
+                const bannerId = req.params.id;
+                const user = await locationFactsBanners.findById(bannerId);
+                if (user) {
+                        const user1 = await locationFactsBanners.findByIdAndDelete({ _id: user._id });;
+                        if (user1) {
+                                return res.status(201).json({ message: "LocationFactsBanner delete successfully.", status: 200, data: {}, });
+                        }
+                } else {
+                        return res.status(201).json({ message: "LocationFactsBanner not Found", status: 404, data: {}, });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: "Failed to retrieve LocationFactsBanner" });
+        }
+};
+exports.getAllLocationFactsBanner = async (req, res) => {
+        try {
+                const categories = await locationFactsBanners.find();
+                if (categories.length > 0) {
+                        return res.status(200).json({ status: 200, message: 'LocationFactsBanner found successfully', data: categories });
+                } else {
+                        return res.status(404).json({ status: 404, message: 'LocationFactsBanner not found.', data: categories });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to fetch LocationFactsBanner' });
+        }
+};
+exports.createRegistrationDetails = async (req, res) => {
+        try {
+                const { eventId, message } = req.body;
+                if (!eventId && !message) {
+                        return res.status(201).json({ message: "Provide require fields  eventId, message", status: 404, data: {}, });
+                }
+                const findEvent = await event.findById(eventId);
+                if (!findEvent) {
+                        return res.status(404).json({ status: 404, message: 'Event not found' });
+                }
+                let findDgDesk = await dgDesk.findOne({ eventId, message, type: "RegistrationDetails" });
+                if (findDgDesk) {
+                        return res.status(409).json({ status: 409, message: 'RegistrationDetails already successfully', data: findDgDesk });
+                } else {
+                        req.body.type = "RegistrationDetails";
+                        const newCategory = await dgDesk.create(req.body);
+                        return res.status(200).json({ status: 200, message: 'RegistrationDetails created successfully', data: newCategory });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to create RegistrationDetails' });
+        }
+};
+exports.getRegistrationDetailsById = async (req, res) => {
+        try {
+                const registrationDetailsId = req.params.registrationDetailsId;
+                const user = await dgDesk.findById({ _id: registrationDetailsId, type: "RegistrationDetails" });
+                if (user) {
+                        return res.status(201).json({ message: "RegistrationDetails found successfully", status: 200, data: user, });
+                }
+                return res.status(201).json({ message: "RegistrationDetails not Found", status: 404, data: {}, });
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: "Failed to retrieve RegistrationDetails" });
+        }
+};
+exports.updateRegistrationDetails = async (req, res) => {
+        try {
+                const { eventId, message } = req.body;
+                const registrationDetailsId = req.params.registrationDetailsId;
+                const findData = await dgDesk.findById({ _id: registrationDetailsId, type: "RegistrationDetails" });
+                if (!findData) {
+                        return res.status(201).json({ message: "RegistrationDetails not Found", status: 404, data: {}, });
+                }
+                if (eventId) {
+                        const findEvent = await event.findById(eventId);
+                        if (!findEvent) {
+                                return res.status(404).json({ status: 404, message: 'Event not found' });
+                        }
+                }
+                let findCompany = await dgDesk.findOne({ _id: { $ne: findData._id }, eventId, message, type: "RegistrationDetails" });
+                if (findCompany) {
+                        return res.status(409).json({ status: 409, message: 'RegistrationDetails already Exit', data: findCompany });
+                } else {
+                        let data = {
+                                eventId: eventId || findData.eventId,
+                                message: message || findData.message,
+                                type: "RegistrationDetails"
+                        }
+                        const newCategory = await dgDesk.findByIdAndUpdate({ _id: findData._id }, { $set: data }, { new: true });
+                        return res.status(200).json({ status: 200, message: 'RegistrationDetails update successfully', data: newCategory });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to create RegistrationDetails' });
+        }
+};
+exports.deleteRegistrationDetails = async (req, res) => {
+        try {
+                const dgDeskId = req.params.id;
+                const user = await dgDesk.findById({ _id: dgDeskId, type: "RegistrationDetails" });
+                if (user) {
+                        const user1 = await dgDesk.findByIdAndDelete({ _id: user._id });;
+                        if (user1) {
+                                return res.status(201).json({ message: "RegistrationDetails delete successfully.", status: 200, data: {}, });
+                        }
+                } else {
+                        return res.status(201).json({ message: "RegistrationDetails not Found", status: 404, data: {}, });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: "Failed to retrieve RegistrationDetails" });
+        }
+};
+exports.getAllRegistrationDetails = async (req, res) => {
+        try {
+                const categories = await dgDesk.find({ type: "RegistrationDetails" });
+                if (categories.length > 0) {
+                        return res.status(200).json({ status: 200, message: 'RegistrationDetails found successfully', data: categories });
+                } else {
+                        return res.status(404).json({ status: 404, message: 'RegistrationDetails not found.', data: categories });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to fetch RegistrationDetails' });
+        }
+};
+exports.createExhibitionDetail = async (req, res) => {
+        try {
+                const { eventId, message } = req.body;
+                if (!eventId && !message) {
+                        return res.status(201).json({ message: "Provide require fields  eventId, message", status: 404, data: {}, });
+                }
+                const findEvent = await event.findById(eventId);
+                if (!findEvent) {
+                        return res.status(404).json({ status: 404, message: 'Event not found' });
+                }
+                let findDgDesk = await dgDesk.findOne({ eventId, message, type: "ExhibitionDetail" });
+                if (findDgDesk) {
+                        return res.status(409).json({ status: 409, message: 'ExhibitionDetail already successfully', data: findDgDesk });
+                } else {
+                        req.body.type = "ExhibitionDetail";
+                        const newCategory = await dgDesk.create(req.body);
+                        return res.status(200).json({ status: 200, message: 'ExhibitionDetail created successfully', data: newCategory });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to create ExhibitionDetail' });
+        }
+};
+exports.getExhibitionDetailById = async (req, res) => {
+        try {
+                const ExhibitionDetailId = req.params.ExhibitionDetailId;
+                const user = await dgDesk.findById({ _id: ExhibitionDetailId, type: "ExhibitionDetail" });
+                if (user) {
+                        return res.status(201).json({ message: "ExhibitionDetail found successfully", status: 200, data: user, });
+                }
+                return res.status(201).json({ message: "ExhibitionDetail not Found", status: 404, data: {}, });
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: "Failed to retrieve ExhibitionDetail" });
+        }
+};
+exports.updateExhibitionDetail = async (req, res) => {
+        try {
+                const { eventId, message } = req.body;
+                const ExhibitionDetailId = req.params.ExhibitionDetailId;
+                const findData = await dgDesk.findById({ _id: ExhibitionDetailId, type: "ExhibitionDetail" });
+                if (!findData) {
+                        return res.status(201).json({ message: "ExhibitionDetail not Found", status: 404, data: {}, });
+                }
+                if (eventId) {
+                        const findEvent = await event.findById(eventId);
+                        if (!findEvent) {
+                                return res.status(404).json({ status: 404, message: 'Event not found' });
+                        }
+                }
+                let findCompany = await dgDesk.findOne({ _id: { $ne: findData._id }, eventId, message, type: "ExhibitionDetail" });
+                if (findCompany) {
+                        return res.status(409).json({ status: 409, message: 'ExhibitionDetail already Exit', data: findCompany });
+                } else {
+                        let data = {
+                                eventId: eventId || findData.eventId,
+                                message: message || findData.message,
+                                type: "ExhibitionDetail"
+                        }
+                        const newCategory = await dgDesk.findByIdAndUpdate({ _id: findData._id }, { $set: data }, { new: true });
+                        return res.status(200).json({ status: 200, message: 'ExhibitionDetail update successfully', data: newCategory });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to create ExhibitionDetail' });
+        }
+};
+exports.deleteExhibitionDetail = async (req, res) => {
+        try {
+                const dgDeskId = req.params.id;
+                const user = await dgDesk.findById({ _id: dgDeskId, type: "ExhibitionDetail" });
+                if (user) {
+                        const user1 = await dgDesk.findByIdAndDelete({ _id: user._id });;
+                        if (user1) {
+                                return res.status(201).json({ message: "ExhibitionDetail delete successfully.", status: 200, data: {}, });
+                        }
+                } else {
+                        return res.status(201).json({ message: "ExhibitionDetail not Found", status: 404, data: {}, });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: "Failed to retrieve ExhibitionDetail" });
+        }
+};
+exports.getAllExhibitionDetail = async (req, res) => {
+        try {
+                const categories = await dgDesk.find({ type: "ExhibitionDetail" });
+                if (categories.length > 0) {
+                        return res.status(200).json({ status: 200, message: 'ExhibitionDetail found successfully', data: categories });
+                } else {
+                        return res.status(404).json({ status: 404, message: 'ExhibitionDetail not found.', data: categories });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to fetch ExhibitionDetail' });
+        }
+};
+exports.createAboutOrganisation = async (req, res) => {
+        try {
+                const { eventId, message } = req.body;
+                if (!eventId && !message) {
+                        return res.status(201).json({ message: "Provide require fields  eventId, message", status: 404, data: {}, });
+                }
+                const findEvent = await event.findById(eventId);
+                if (!findEvent) {
+                        return res.status(404).json({ status: 404, message: 'Event not found' });
+                }
+                let findDgDesk = await dgDesk.findOne({ eventId, message, type: "AboutOrganisation" });
+                if (findDgDesk) {
+                        return res.status(409).json({ status: 409, message: 'AboutOrganisation already successfully', data: findDgDesk });
+                } else {
+                        req.body.type = "AboutOrganisation";
+                        const newCategory = await dgDesk.create(req.body);
+                        return res.status(200).json({ status: 200, message: 'AboutOrganisation created successfully', data: newCategory });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to create AboutOrganisation' });
+        }
+};
+exports.getAboutOrganisationById = async (req, res) => {
+        try {
+                const AboutOrganisationId = req.params.AboutOrganisationId;
+                const user = await dgDesk.findById({ _id: AboutOrganisationId, type: "AboutOrganisation" });
+                if (user) {
+                        return res.status(201).json({ message: "AboutOrganisation found successfully", status: 200, data: user, });
+                }
+                return res.status(201).json({ message: "AboutOrganisation not Found", status: 404, data: {}, });
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: "Failed to retrieve AboutOrganisation" });
+        }
+};
+exports.updateAboutOrganisation = async (req, res) => {
+        try {
+                const { eventId, message } = req.body;
+                const AboutOrganisationId = req.params.AboutOrganisationId;
+                const findData = await dgDesk.findById({ _id: AboutOrganisationId, type: "AboutOrganisation" });
+                if (!findData) {
+                        return res.status(201).json({ message: "AboutOrganisation not Found", status: 404, data: {}, });
+                }
+                if (eventId) {
+                        const findEvent = await event.findById(eventId);
+                        if (!findEvent) {
+                                return res.status(404).json({ status: 404, message: 'Event not found' });
+                        }
+                }
+                let findCompany = await dgDesk.findOne({ _id: { $ne: findData._id }, eventId, message, type: "AboutOrganisation" });
+                if (findCompany) {
+                        return res.status(409).json({ status: 409, message: 'AboutOrganisation already Exit', data: findCompany });
+                } else {
+                        let data = {
+                                eventId: eventId || findData.eventId,
+                                message: message || findData.message,
+                                type: "AboutOrganisation"
+                        }
+                        const newCategory = await dgDesk.findByIdAndUpdate({ _id: findData._id }, { $set: data }, { new: true });
+                        return res.status(200).json({ status: 200, message: 'AboutOrganisation update successfully', data: newCategory });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to create AboutOrganisation' });
+        }
+};
+exports.deleteAboutOrganisation = async (req, res) => {
+        try {
+                const dgDeskId = req.params.id;
+                const user = await dgDesk.findById({ _id: dgDeskId, type: "AboutOrganisation" });
+                if (user) {
+                        const user1 = await dgDesk.findByIdAndDelete({ _id: user._id });;
+                        if (user1) {
+                                return res.status(201).json({ message: "AboutOrganisation delete successfully.", status: 200, data: {}, });
+                        }
+                } else {
+                        return res.status(201).json({ message: "AboutOrganisation not Found", status: 404, data: {}, });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: "Failed to retrieve AboutOrganisation" });
+        }
+};
+exports.getAllAboutOrganisation = async (req, res) => {
+        try {
+                const categories = await dgDesk.find({ type: "AboutOrganisation" });
+                if (categories.length > 0) {
+                        return res.status(200).json({ status: 200, message: 'AboutOrganisation found successfully', data: categories });
+                } else {
+                        return res.status(404).json({ status: 404, message: 'AboutOrganisation not found.', data: categories });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to fetch AboutOrganisation' });
+        }
+};
+exports.createMeeting = async (req, res) => {
+        try {
+                const { eventId, title, description, fromDate, toDate, fromTime, toTime, countryId, cityId, address, pinCode, isPublished, meetingBy } = req.body;
+                if (!eventId && !countryId && !cityId && !title) {
+                        return res.status(201).json({ message: "Provide require fields  eventId, countryId, cityId, title", status: 404, data: {}, });
+                }
+                if (countryId) {
+                        const findCompany = await Location.findById(countryId);
+                        if (!findCompany) {
+                                return res.status(404).json({ status: 404, message: 'Country not found' });
+                        }
+                }
+                if (cityId) {
+                        const findEventCategoryId = await Location.findById(cityId);
+                        if (!findEventCategoryId) {
+                                return res.status(404).json({ status: 404, message: 'City not found' });
+                        }
+                }
+                if (eventId) {
+                        const findEvent = await event.findById(eventId);
+                        if (!findEvent) {
+                                return res.status(404).json({ status: 404, message: 'Event not found' });
+                        }
+                }
+                let findSpeaker = await meeting.findOne({ eventId, countryId, cityId, title });
+                if (findSpeaker) {
+                        return res.status(409).json({ status: 409, message: 'Meeting already successfully', data: findCategory });
+                } else {
+                        const d = new Date(fromDate);
+                        req.body.fromDate = d.toISOString();
+                        const d1 = new Date(toDate);
+                        req.body.toDate = d1.toISOString();
+                        const newCategory = await meeting.create(req.body);
+                        return res.status(200).json({ status: 200, message: 'Meeting created successfully', data: newCategory });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to create meeting' });
+        }
+};
+exports.getMeetingById = async (req, res) => {
+        try {
+                const meetingId = req.params.meetingId;
+                const user = await meeting.findById(meetingId);
+                if (user) {
+                        return res.status(201).json({ message: "Meeting found successfully", status: 200, data: user, });
+                }
+                return res.status(201).json({ message: "Meeting not Found", status: 404, data: {}, });
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: "Failed to retrieve Meeting" });
+        }
+};
+exports.updateMeeting = async (req, res) => {
+        try {
+                const { eventId, title, description, fromDate, toDate, fromTime, toTime, countryId, cityId, address, pinCode, isPublished, meetingBy } = req.body;
+                const meetingId = req.params.meetingId;
+                const findData = await meeting.findById(meetingId);
+                if (!findData) {
+                        return res.status(201).json({ message: "Meeting not Found", status: 404, data: {}, });
+                }
+                if (countryId) {
+                        const findCompany = await Location.findById(countryId);
+                        if (!findCompany) {
+                                return res.status(404).json({ status: 404, message: 'Country not found' });
+                        }
+                }
+                if (cityId) {
+                        const findEventCategoryId = await Location.findById(cityId);
+                        if (!findEventCategoryId) {
+                                return res.status(404).json({ status: 404, message: 'City not found' });
+                        }
+                }
+                if (eventId) {
+                        const findEvent = await event.findById(eventId);
+                        if (!findEvent) {
+                                return res.status(404).json({ status: 404, message: 'Event not found' });
+                        }
+                }
+                let findCompany = await meeting.findOne({ _id: { $ne: findData._id }, eventId, countryId, cityId, title, });
+                if (findCompany) {
+                        return res.status(409).json({ status: 409, message: 'Meeting already Exit', data: findCategory });
+                } else {
+                        if (fromDate) {
+                                const d = new Date(fromDate);
+                                req.body.fromDate = d.toISOString();
+                        }
+                        if (toDate) {
+                                const d1 = new Date(toDate);
+                                req.body.toDate = d1.toISOString();
+                        }
+                        let data = {
+                                eventId: eventId || findData.eventId,
+                                title: title || findData.title,
+                                description: description || findData.description,
+                                fromDate: req.body.fromDate || findData.fromDate,
+                                toDate: req.body.toDate || findData.toDate,
+                                fromTime: fromTime || findData.fromTime,
+                                toTime: toTime || findData.toTime,
+                                countryId: countryId || findData.meetingCountryId,
+                                cityId: cityId || findData.cityId,
+                                address: address || findData.address,
+                                pinCode: pinCode || findData.pinCode,
+                                isPublished: isPublished || findData.isPublished,
+                                meetingBy: meetingBy || findData.meetingBy
+                        }
+                        const newCategory = await meeting.findByIdAndUpdate({ _id: findData._id }, { $set: data }, { new: true });
+                        return res.status(200).json({ status: 200, message: 'meeting update successfully', data: newCategory });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to create meeting' });
+        }
+};
+exports.deleteMeeting = async (req, res) => {
+        try {
+                const meetingId = req.params.id;
+                const user = await meeting.findById(meetingId);
+                if (user) {
+                        const user1 = await meeting.findByIdAndDelete({ _id: user._id });;
+                        if (user1) {
+                                return res.status(201).json({ message: "Meeting delete successfully.", status: 200, data: {}, });
+                        }
+                } else {
+                        return res.status(201).json({ message: "Meeting not Found", status: 404, data: {}, });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: "Failed to retrieve Meeting" });
+        }
+};
+exports.getAllMeeting = async (req, res) => {
+        try {
+                const categories = await meeting.find();
+                if (categories.length > 0) {
+                        return res.status(200).json({ status: 200, message: 'Meeting found successfully', data: categories });
+                } else {
+                        return res.status(404).json({ status: 404, message: 'Meeting not found.', data: categories });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to fetch Meeting' });
         }
 };
