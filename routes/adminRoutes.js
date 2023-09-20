@@ -167,4 +167,20 @@ module.exports = (app) => {
         app.put('/api/v1/BookCabs/:bookCabsId', upload.single('image'), authJwt.verifyToken, auth.updateBookCabs);               // edit BookCabs
         app.delete("/api/v1/BookCabs/:id", authJwt.verifyToken, auth.deleteBookCabs);                                            // delete BookCabs
         app.get('/api/v1/BookCabs', auth.getAllBookCabs);                                                                        // all BookCabs
+        app.post('/api/v1/ChairmanDesk', upload.single('image'), authJwt.verifyToken, auth.createChairmanDesk);                  // add ChairmanDesk
+        app.get('/api/v1/ChairmanDesk/:chairmanDeskId', auth.getChairmanDeskById);                                               // view ChairmanDesk
+        app.put('/api/v1/ChairmanDesk/:chairmanDeskId', upload.single('image'), authJwt.verifyToken, auth.updateChairmanDesk);   // edit ChairmanDesk
+        app.delete("/api/v1/ChairmanDesk/:id", authJwt.verifyToken, auth.deleteChairmanDesk);                                    // delete ChairmanDesk
+        app.get('/api/v1/ChairmanDesk', auth.getAllChairmanDesk);                                                                // all ChairmanDesk
+        app.post('/api/v1/AboutFai', authJwt.verifyToken, auth.createAboutFai);                                                  // add AboutFai
+        app.get('/api/v1/AboutFai/:aboutFaiId', auth.getAboutFaiById);                                                           // view AboutFai
+        app.put('/api/v1/AboutFai/:aboutFaiId', authJwt.verifyToken, auth.updateAboutFai);                                       // edit AboutFai
+        app.delete("/api/v1/AboutFai/:id", authJwt.verifyToken, auth.deleteAboutFai);                                            // delete AboutFai
+        app.get('/api/v1/AboutFai', auth.getAllAboutFai);                                                                        // all AboutFai
+        app.post('/api/v1/SeminarTheme', authJwt.verifyToken, auth.createSeminarTheme);                                          // add SeminarTheme
+        app.get('/api/v1/SeminarTheme/:seminarThemeId', auth.getSeminarThemeById);                                               // view SeminarTheme
+        app.put('/api/v1/SeminarTheme/:seminarThemeId', authJwt.verifyToken, auth.updateSeminarTheme);                           // edit SeminarTheme
+        app.delete("/api/v1/SeminarTheme/:id", authJwt.verifyToken, auth.deleteSeminarTheme);                                    // delete SeminarTheme
+        app.get('/api/v1/SeminarTheme', auth.getAllSeminarTheme);                                                                // all SeminarTheme
+
 }

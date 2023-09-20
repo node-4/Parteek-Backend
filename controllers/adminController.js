@@ -2,6 +2,7 @@ const bcrypt = require('bcrypt');
 const advertisement = require('../model/Advertisement/advertisement');
 const banner = require('../model/Banner/banner');
 const bookCabs = require('../model/BookCabs/bookCabs');
+const ChairmanDeskAboutFaiSeminarTheme = require('../model/ChairmanDeskAboutFaiSeminarTheme/ChairmanDeskAboutFaiSeminarTheme');
 const company = require('../model/company/company');
 const CompanyCategory = require('../model/company/companyCategoryModel');
 const delegate = require('../model/Delegate/delegate');
@@ -3650,5 +3651,232 @@ exports.getAllBookCabs = async (req, res) => {
         } catch (error) {
                 console.error(error);
                 return res.status(500).json({ error: 'Failed to fetch BookCabs' });
+        }
+};
+exports.createChairmanDesk = async (req, res) => {
+        try {
+                const { image, description, name, designation } = req.body;
+                let findChairmanDesk = await ChairmanDeskAboutFaiSeminarTheme.findOne({ type: "ChairmanDesk" });
+                if (findChairmanDesk) {
+                        if (req.file) {
+                                req.body.image = req.file.path
+                        } else {
+                                req.body.image = findChairmanDesk.image;
+                        }
+                        let obj = {
+                                type: "ChairmanDesk",
+                                image: req.body.image || findChairmanDesk.image,
+                                designation: designation || findChairmanDesk.designation,
+                                name: name || findChairmanDesk.name,
+                                description: description || findChairmanDesk.description
+                        }
+                        const newCategory = await ChairmanDeskAboutFaiSeminarTheme.findByIdAndUpdate({ _id: findChairmanDesk._id }, { $set: data }, { new: true });
+                        return res.status(200).json({ status: 200, message: 'ChairmanDesk update successfully', data: newCategory });
+                } else {
+                        if (req.file) {
+                                req.body.image = req.file.path
+                        } else {
+                                return res.status(201).json({ message: "Image require", status: 404, data: {}, });
+                        }
+                        let obj = {
+                                type: "ChairmanDesk",
+                                image: req.body.image,
+                                designation: designation,
+                                name: name,
+                                description: description
+                        }
+                        const newCategory = await ChairmanDeskAboutFaiSeminarTheme.create(obj);
+                        return res.status(200).json({ status: 200, message: 'ChairmanDesk created successfully', data: newCategory });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to create ChairmanDesk' });
+        }
+};
+exports.getChairmanDeskById = async (req, res) => {
+        try {
+                const chairmanDeskId = req.params.chairmanDeskId;
+                const user = await ChairmanDeskAboutFaiSeminarTheme.findById(chairmanDeskId);
+                if (user) {
+                        return res.status(201).json({ message: "ChairmanDesk found successfully", status: 200, data: user, });
+                }
+                return res.status(201).json({ message: "ChairmanDesk not Found", status: 404, data: {}, });
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: "Failed to retrieve ChairmanDesk" });
+        }
+};
+exports.deleteChairmanDesk = async (req, res) => {
+        try {
+                const chairmanDeskId = req.params.id;
+                const user = await ChairmanDeskAboutFaiSeminarTheme.findById(chairmanDeskId);
+                if (user) {
+                        const user1 = await ChairmanDeskAboutFaiSeminarTheme.findByIdAndDelete({ _id: user._id });;
+                        if (user1) {
+                                return res.status(201).json({ message: "ChairmanDesk delete successfully.", status: 200, data: {}, });
+                        }
+                } else {
+                        return res.status(201).json({ message: "ChairmanDesk not Found", status: 404, data: {}, });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: "Failed to retrieve ChairmanDesk" });
+        }
+};
+exports.getAllChairmanDesk = async (req, res) => {
+        try {
+                const categories = await ChairmanDeskAboutFaiSeminarTheme.find({ type: "ChairmanDesk" });
+                if (categories.length > 0) {
+                        return res.status(200).json({ status: 200, message: 'ChairmanDesk found successfully', data: categories });
+                } else {
+                        return res.status(404).json({ status: 404, message: 'ChairmanDesk not found.', data: categories });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to fetch ChairmanDesk' });
+        }
+};
+exports.createAboutFai = async (req, res) => {
+        try {
+                const { description, name, designation, } = req.body;
+                let findAboutFai = await ChairmanDeskAboutFaiSeminarTheme.findOne({ type: "AboutFai" });
+                if (findAboutFai) {
+                        let obj = {
+                                type: "AboutFai",
+                                designation: designation || findAboutFai.designation,
+                                name: name || findAboutFai.name,
+                                description: description || findAboutFai.description
+                        }
+                        const newCategory = await ChairmanDeskAboutFaiSeminarTheme.findByIdAndUpdate({ _id: findAboutFai._id }, { $set: data }, { new: true });
+                        return res.status(200).json({ status: 200, message: 'AboutFai update successfully', data: newCategory });
+                } else {
+                        let obj = {
+                                type: "AboutFai",
+                                designation: designation,
+                                name: name,
+                                description: description
+                        }
+                        const newCategory = await ChairmanDeskAboutFaiSeminarTheme.create(obj);
+                        return res.status(200).json({ status: 200, message: 'AboutFai created successfully', data: newCategory });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to create AboutFai' });
+        }
+};
+exports.getAboutFaiById = async (req, res) => {
+        try {
+                const aboutFaiId = req.params.aboutFaiId;
+                const user = await ChairmanDeskAboutFaiSeminarTheme.findById(aboutFaiId);
+                if (user) {
+                        return res.status(201).json({ message: "AboutFai found successfully", status: 200, data: user, });
+                }
+                return res.status(201).json({ message: "AboutFai not Found", status: 404, data: {}, });
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: "Failed to retrieve AboutFai" });
+        }
+};
+exports.deleteAboutFai = async (req, res) => {
+        try {
+                const aboutFaiId = req.params.id;
+                const user = await ChairmanDeskAboutFaiSeminarTheme.findById(aboutFaiId);
+                if (user) {
+                        const user1 = await ChairmanDeskAboutFaiSeminarTheme.findByIdAndDelete({ _id: user._id });;
+                        if (user1) {
+                                return res.status(201).json({ message: "AboutFai delete successfully.", status: 200, data: {}, });
+                        }
+                } else {
+                        return res.status(201).json({ message: "AboutFai not Found", status: 404, data: {}, });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: "Failed to retrieve AboutFai" });
+        }
+};
+exports.getAllAboutFai = async (req, res) => {
+        try {
+                const categories = await ChairmanDeskAboutFaiSeminarTheme.find({ type: "AboutFai" });
+                if (categories.length > 0) {
+                        return res.status(200).json({ status: 200, message: 'AboutFai found successfully', data: categories });
+                } else {
+                        return res.status(404).json({ status: 404, message: 'AboutFai not found.', data: categories });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to fetch AboutFai' });
+        }
+};
+exports.createSeminarTheme = async (req, res) => {
+        try {
+                const { title, date, location, description } = req.body;
+                let findSeminarTheme = await ChairmanDeskAboutFaiSeminarTheme.findOne({ type: "SeminarTheme" });
+                if (findSeminarTheme) {
+                        let obj = {
+                                type: "SeminarTheme",
+                                title: title || findSeminarTheme.title,
+                                location: location || findSeminarTheme.location,
+                                date: date || findSeminarTheme.date,
+                                description: description || findSeminarTheme.description
+                        }
+                        const newCategory = await ChairmanDeskAboutFaiSeminarTheme.findByIdAndUpdate({ _id: findSeminarTheme._id }, { $set: data }, { new: true });
+                        return res.status(200).json({ status: 200, message: 'ChairmanDesk update successfully', data: newCategory });
+                } else {
+                        let obj = {
+                                type: "SeminarTheme",
+                                title: req.body.title,
+                                location: location,
+                                date: date,
+                                description: description
+                        }
+                        const newCategory = await ChairmanDeskAboutFaiSeminarTheme.create(obj);
+                        return res.status(200).json({ status: 200, message: 'ChairmanDesk created successfully', data: newCategory });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to create ChairmanDesk' });
+        }
+};
+exports.getSeminarThemeId = async (req, res) => {
+        try {
+                const chairmanDeskId = req.params.chairmanDeskId;
+                const user = await ChairmanDeskAboutFaiSeminarTheme.findById(chairmanDeskId);
+                if (user) {
+                        return res.status(201).json({ message: "ChairmanDesk found successfully", status: 200, data: user, });
+                }
+                return res.status(201).json({ message: "ChairmanDesk not Found", status: 404, data: {}, });
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: "Failed to retrieve ChairmanDesk" });
+        }
+};
+exports.deleteSeminarTheme = async (req, res) => {
+        try {
+                const chairmanDeskId = req.params.id;
+                const user = await ChairmanDeskAboutFaiSeminarTheme.findById(chairmanDeskId);
+                if (user) {
+                        const user1 = await ChairmanDeskAboutFaiSeminarTheme.findByIdAndDelete({ _id: user._id });;
+                        if (user1) {
+                                return res.status(201).json({ message: "ChairmanDesk delete successfully.", status: 200, data: {}, });
+                        }
+                } else {
+                        return res.status(201).json({ message: "ChairmanDesk not Found", status: 404, data: {}, });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: "Failed to retrieve ChairmanDesk" });
+        }
+};
+exports.getAllSeminarTheme = async (req, res) => {
+        try {
+                const categories = await ChairmanDeskAboutFaiSeminarTheme.find({ type: "SeminarTheme" });
+                if (categories.length > 0) {
+                        return res.status(200).json({ status: 200, message: 'ChairmanDesk found successfully', data: categories });
+                } else {
+                        return res.status(404).json({ status: 404, message: 'ChairmanDesk not found.', data: categories });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to fetch ChairmanDesk' });
         }
 };
