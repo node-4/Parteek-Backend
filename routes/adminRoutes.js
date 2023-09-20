@@ -150,4 +150,21 @@ module.exports = (app) => {
         app.put('/api/v1/PlaceOfInterest/:nearByPlaceId', authJwt.verifyToken, auth.updatePlaceOfInterest);                      // edit PlaceOfInterest
         app.delete("/api/v1/PlaceOfInterest/:id", authJwt.verifyToken, auth.deletePlaceOfInterest);                              // delete PlaceOfInterest
         app.get('/api/v1/PlaceOfInterest', auth.getAllPlaceOfInterest);                                                          // all PlaceOfInterest
+        app.post('/api/v1/AppHelpline', upload.single('image'), authJwt.verifyToken, auth.createAppHelpline);                    // add AppHelpline
+        app.get('/api/v1/AppHelpline/:appHelplineId', auth.getAppHelplineById);                                                  // view AppHelpline
+        app.put('/api/v1/AppHelpline/:appHelplineId', upload.single('image'), authJwt.verifyToken, auth.updateAppHelpline);      // edit AppHelpline
+        app.delete("/api/v1/AppHelpline/:id", authJwt.verifyToken, auth.deleteAppHelpline);                                      // delete AppHelpline
+        app.get('/api/v1/AppHelpline', auth.getAllAppHelpline);                                                                  // all AppHelpline
+        app.post("/api/v1/FAQ", authJwt.verifyToken, auth.createFaq);                                                            // add FAQ
+        app.get("/api/v1/FAQ/:id", auth.getFaqById);                                                                             // view FAQ
+        app.put("/api/v1/FAQ/:id", authJwt.verifyToken, auth.updateFaq);                                                         // edit FAQ
+        app.delete("/api/v1/FAQ/:id", authJwt.verifyToken, auth.deleteFaq);                                                      // delete FAQ
+        app.get("/api/v1/FAQ", auth.getAllFaqs);                                                                                 // all FAQ
+        app.get("/api/v1/Feedback/:id", auth.getFeedBackById);                                                                   // view Feedback
+        app.get("/api/v1/Feedback", auth.getAllFeedBack);                                                                        // all Feedback
+        app.post('/api/v1/BookCabs', upload.single('image'), authJwt.verifyToken, auth.createBookCabs);                          // add BookCabs
+        app.get('/api/v1/BookCabs/:bookCabsId', auth.getBookCabsById);                                                           // view BookCabs
+        app.put('/api/v1/BookCabs/:bookCabsId', upload.single('image'), authJwt.verifyToken, auth.updateBookCabs);               // edit BookCabs
+        app.delete("/api/v1/BookCabs/:id", authJwt.verifyToken, auth.deleteBookCabs);                                            // delete BookCabs
+        app.get('/api/v1/BookCabs', auth.getAllBookCabs);                                                                        // all BookCabs
 }

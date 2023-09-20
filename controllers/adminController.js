@@ -1,6 +1,7 @@
 const bcrypt = require('bcrypt');
 const advertisement = require('../model/Advertisement/advertisement');
 const banner = require('../model/Banner/banner');
+const bookCabs = require('../model/BookCabs/bookCabs');
 const company = require('../model/company/company');
 const CompanyCategory = require('../model/company/companyCategoryModel');
 const delegate = require('../model/Delegate/delegate');
@@ -14,7 +15,10 @@ const locationFactsBanners = require('../model/EventLocationFacts/locationFactsB
 const eventSchedule = require('../model/EventSchedule/eventSchedule');
 const exhibitor = require('../model/Exhibitor/Exhibitor');
 const feedbackParameter = require('../model/FeedbackParameter/feedbackParameter');
+const Faq = require("../model/FAQ/faq.Model");
+const feedback = require("../model/Feedback/feedback");
 const helpline = require('../model/Helpline/helpline');
+const appHelpline = require('../model/Helpline/appHelpline');
 const meeting = require('../model/Meeting/meeting');
 const nearByInterestType = require('../model/NearByPlaceAndInterest/nearByInterestType');
 const nearByPlaceAndInterest = require('../model/NearByPlaceAndInterest/nearByPlaceAndInterest');
@@ -3370,5 +3374,281 @@ exports.getAllPlaceOfInterest = async (req, res) => {
         } catch (error) {
                 console.error(error);
                 return res.status(500).json({ error: 'Failed to fetch NearByPlace' });
+        }
+};
+exports.createAppHelpline = async (req, res) => {
+        try {
+                const { helplineNo, helplineTitle, helplineImage, description, } = req.body;
+                let findAppHelpline = await appHelpline.findOne({ helplineNo, helplineTitle });
+                if (findAppHelpline) {
+                        return res.status(409).json({ status: 409, message: 'App Helpline already successfully', data: findAppHelpline });
+                } else {
+                        if (req.file) {
+                                req.body.helplineImage = req.file.path
+                        } else {
+                                return res.status(201).json({ message: "Helpline image require", status: 404, data: {}, });
+                        }
+                        const newCategory = await appHelpline.create(req.body);
+                        return res.status(200).json({ status: 200, message: 'App Helpline created successfully', data: newCategory });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to create App Helpline' });
+        }
+};
+exports.getAppHelplineById = async (req, res) => {
+        try {
+                const appHelplineId = req.params.appHelplineId;
+                const user = await appHelpline.findById(appHelplineId);
+                if (user) {
+                        return res.status(201).json({ message: "AppHelpline found successfully", status: 200, data: user, });
+                }
+                return res.status(201).json({ message: "AppHelpline not Found", status: 404, data: {}, });
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: "Failed to retrieve AppHelpline" });
+        }
+};
+exports.updateAppHelpline = async (req, res) => {
+        try {
+                const { helplineNo, helplineTitle, helplineImage, description, } = req.body;
+                const appHelplineId = req.params.appHelplineId;
+                const findData = await appHelpline.findById(appHelplineId);
+                if (!findData) {
+                        return res.status(201).json({ message: "App Helpline not Found", status: 404, data: {}, });
+                }
+                let findCompany = await appHelpline.findOne({ _id: { $ne: findData._id }, helplineNo, helplineTitle, });
+                if (findCompany) {
+                        return res.status(409).json({ status: 409, message: 'App Helpline already Exit', data: findCompany });
+                } else {
+                        if (req.file) {
+                                req.body.helplineImage = req.file.path;
+                        } else {
+                                req.body.helplineImage = findData.helplineImage;
+                        }
+                        let data = {
+                                helplineNo: helplineNo || findData.helplineNo,
+                                helplineTitle: helplineTitle || findData.helplineTitle,
+                                helplineImage: req.body.helplineImage,
+                                description: description || findData.description,
+                        }
+                        const newCategory = await appHelpline.findByIdAndUpdate({ _id: findData._id }, { $set: data }, { new: true });
+                        return res.status(200).json({ status: 200, message: 'App Helpline update successfully', data: newCategory });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to create AppHelpline' });
+        }
+};
+exports.deleteAppHelpline = async (req, res) => {
+        try {
+                const appHelplineId = req.params.id;
+                const user = await appHelpline.findById(appHelplineId);
+                if (user) {
+                        const user1 = await appHelpline.findByIdAndDelete({ _id: user._id });;
+                        if (user1) {
+                                return res.status(201).json({ message: "AppHelpline delete successfully.", status: 200, data: {}, });
+                        }
+                } else {
+                        return res.status(201).json({ message: "AppHelpline not Found", status: 404, data: {}, });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: "Failed to retrieve AppHelpline" });
+        }
+};
+exports.getAllAppHelpline = async (req, res) => {
+        try {
+                const categories = await appHelpline.find();
+                if (categories.length > 0) {
+                        return res.status(200).json({ status: 200, message: 'AppHelpline found successfully', data: categories });
+                } else {
+                        return res.status(404).json({ status: 404, message: 'AppHelpline not found.', data: categories });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to fetch AppHelpline' });
+        }
+};
+exports.createFaq = async (req, res) => {
+        const { question, answer } = req.body;
+        try {
+                if (!question || !answer) {
+                        return res.status(400).json({ message: "questions and answers cannot be blank " });
+                }
+                const faq = await Faq.create(req.body);
+                return res.status(200).json({ status: 200, message: "FAQ Added Successfully ", data: faq });
+        } catch (err) {
+                console.log(err);
+                return res.status(500).json({ message: "Error ", status: 500, data: err.message });
+        }
+};
+exports.getFaqById = async (req, res) => {
+        const { id } = req.params;
+        try {
+                const faq = await Faq.findById(id);
+                if (!faq) {
+                        return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                }
+                return res.status(200).json({ status: 200, message: "faqs retrieved successfully ", data: faq });
+        } catch (err) {
+                console.log(err);
+                return res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        }
+};
+exports.updateFaq = async (req, res) => {
+        const { id } = req.params;
+        try {
+                const faq = await Faq.findByIdAndUpdate(id, req.body, { new: true });
+                if (!faq) {
+                        return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                }
+                return res.status(200).json({ status: 200, message: "update successfully.", data: faq });
+        } catch (err) {
+                console.log(err);
+                return res.status(500).json({ message: "Something went wrong ", status: 500, data: err.message });
+        }
+};
+exports.getAllFaqs = async (req, res) => {
+        try {
+                const faqs = await Faq.find().lean();
+                if (faqs.length == 0) {
+                        return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                }
+                return res.status(200).json({ status: 200, message: "faqs retrieved successfully ", data: faqs });
+        } catch (err) {
+                console.log(err);
+                return res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        }
+};
+exports.deleteFaq = async (req, res) => {
+        const { id } = req.params;
+        try {
+                const faq = await Faq.findByIdAndDelete(id);
+                if (!faq) {
+                        return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                }
+                return res.status(200).json({ status: 200, message: "FAQ Deleted Successfully ", data: faq });
+        } catch (err) {
+                console.log(err);
+                return res.status(500).json({ message: "Something went wrong ", status: 500, data: err.message });
+        }
+};
+exports.getFeedBackById = async (req, res) => {
+        const { id } = req.params;
+        try {
+                const findFeedback = await feedback.findById(id).populate('rating.user');
+                if (!findFeedback) {
+                        return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                }
+                return res.status(200).json({ status: 200, message: "FeedBack retrieved successfully ", data: findFeedback });
+        } catch (err) {
+                console.log(err);
+                return res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        }
+};
+exports.getAllFeedBack = async (req, res) => {
+        try {
+                const findFeedback = await feedback.find().lean().populate('rating.user');
+                if (findFeedback.length == 0) {
+                        return res.status(404).json({ status: 404, message: "No data found", data: {} });
+                }
+                return res.status(200).json({ status: 200, message: "FeedBack retrieved successfully ", data: findFeedback });
+        } catch (err) {
+                console.log(err);
+                return res.status(501).send({ status: 501, message: "server error.", data: {}, });
+        }
+};
+exports.createBookCabs = async (req, res) => {
+        try {
+                const { name, image, link, } = req.body;
+                let findBookCabs = await bookCabs.findOne({ name });
+                if (findBookCabs) {
+                        return res.status(409).json({ status: 409, message: 'Book Cab already successfully', data: findBookCabs });
+                } else {
+                        if (req.file) {
+                                req.body.image = req.file.path
+                        } else {
+                                return res.status(201).json({ message: "Image require", status: 404, data: {}, });
+                        }
+                        const newCategory = await bookCabs.create(req.body);
+                        return res.status(200).json({ status: 200, message: 'Book Cab created successfully', data: newCategory });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to create Book Cab' });
+        }
+};
+exports.getBookCabsById = async (req, res) => {
+        try {
+                const bookCabsId = req.params.bookCabsId;
+                const user = await bookCabs.findById(bookCabsId);
+                if (user) {
+                        return res.status(201).json({ message: "BookCabs found successfully", status: 200, data: user, });
+                }
+                return res.status(201).json({ message: "BookCabs not Found", status: 404, data: {}, });
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: "Failed to retrieve BookCabs" });
+        }
+};
+exports.updateBookCabs = async (req, res) => {
+        try {
+                const { name, image, link, } = req.body;
+                const bookCabsId = req.params.bookCabsId;
+                const findData = await bookCabs.findById(bookCabsId);
+                if (!findData) {
+                        return res.status(201).json({ message: "Book Cab not Found", status: 404, data: {}, });
+                }
+                let findCompany = await bookCabs.findOne({ _id: { $ne: findData._id }, name, });
+                if (findCompany) {
+                        return res.status(409).json({ status: 409, message: 'Book Cab already Exit', data: findCompany });
+                } else {
+                        if (req.file) {
+                                req.body.image = req.file.path;
+                        } else {
+                                req.body.image = findData.image;
+                        }
+                        let data = {
+                                name: name || findData.name,
+                                link: link || findData.link,
+                                image: req.body.image,
+                        }
+                        const newCategory = await bookCabs.findByIdAndUpdate({ _id: findData._id }, { $set: data }, { new: true });
+                        return res.status(200).json({ status: 200, message: 'Book Cab update successfully', data: newCategory });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to create BookCabs' });
+        }
+};
+exports.deleteBookCabs = async (req, res) => {
+        try {
+                const bookCabsId = req.params.id;
+                const user = await bookCabs.findById(bookCabsId);
+                if (user) {
+                        const user1 = await bookCabs.findByIdAndDelete({ _id: user._id });;
+                        if (user1) {
+                                return res.status(201).json({ message: "BookCabs delete successfully.", status: 200, data: {}, });
+                        }
+                } else {
+                        return res.status(201).json({ message: "BookCabs not Found", status: 404, data: {}, });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: "Failed to retrieve BookCabs" });
+        }
+};
+exports.getAllBookCabs = async (req, res) => {
+        try {
+                const categories = await bookCabs.find();
+                if (categories.length > 0) {
+                        return res.status(200).json({ status: 200, message: 'BookCabs found successfully', data: categories });
+                } else {
+                        return res.status(404).json({ status: 404, message: 'BookCabs not found.', data: categories });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to fetch BookCabs' });
         }
 };

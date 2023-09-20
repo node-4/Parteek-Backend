@@ -14,8 +14,13 @@ const locationFactsBanners = require('../model/EventLocationFacts/locationFactsB
 const eventSchedule = require('../model/EventSchedule/eventSchedule');
 const exhibitor = require('../model/Exhibitor/Exhibitor');
 const feedbackParameter = require('../model/FeedbackParameter/feedbackParameter');
+const Faq = require("../model/FAQ/faq.Model");
+const feedback = require("../model/Feedback/feedback");
 const helpline = require('../model/Helpline/helpline');
+const appHelpline = require('../model/Helpline/appHelpline');
 const meeting = require('../model/Meeting/meeting');
+const nearByInterestType = require('../model/NearByPlaceAndInterest/nearByInterestType');
+const nearByPlaceAndInterest = require('../model/NearByPlaceAndInterest/nearByPlaceAndInterest');
 const paper = require('../model/Speaker/paper');
 const speaker = require('../model/Speaker/speaker');
 const sponser = require('../model/Sponser/sponser');
@@ -189,5 +194,43 @@ exports.deleteUser = async (req, res) => {
     } catch (error) {
         console.error(error);
         return res.status(500).json({ error: "Failed to retrieve users" });
+    }
+};
+exports.giveFeedback = async (req, res) => {
+    const { type, message, rating } = req.body;
+    try {
+        if (!type && !message || !rating) {
+            return res.status(400).json({ message: "type and  message cannot be blank " });
+        }
+        let findFeedback = await feedback.findOne({ type: type });
+        if (findFeedback) {
+            if (findFeedback.rating.length == 0) {
+                const review = {
+                    user: req.user._id,
+                    message: message,
+                    rating: rating
+                };
+                findFeedback.rating.push(review);
+            } else {
+                const review = {
+                    user: req.user._id,
+                    message: message,
+                    rating: rating
+                };
+                findFeedback.rating.push(review);
+            }
+            let avg = 0;
+            findFeedback.rating.forEach((rev) => { avg += rev.rating; });
+            findFeedback.averageRating = avg / findFeedback.rating.length;
+            await findFeedback.save({ validateBeforeSave: false })
+            return res.status(200).json({ status: 200, data: findFeedback });
+        } else {
+            let obj = { type: type, rating: [{ user: req.user._id, message: message, rating: rating, }], averageRating: rating, }
+            const addDeedback = await feedback.create(obj);
+            return res.status(200).json({ status: 200, message: "Feedback Added Successfully ", data: addDeedback });
+        }
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({ message: "Error ", status: 500, data: err.message });
     }
 };
