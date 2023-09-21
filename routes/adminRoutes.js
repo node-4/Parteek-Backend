@@ -179,5 +179,9 @@ module.exports = (app) => {
         app.get('/api/v1/SeminarTheme/:seminarThemeId', auth.getSeminarThemeById);                                               // view SeminarTheme
         app.delete("/api/v1/SeminarTheme/:id", authJwt.verifyToken, auth.deleteSeminarTheme);                                    // delete SeminarTheme
         app.get('/api/v1/SeminarTheme', auth.getAllSeminarTheme);                                                                // all SeminarTheme
-
+        app.post('/api/v1/CulturalPrograms', upload.single('image'), authJwt.verifyToken, auth.createCulturalPrograms);           // add CulturalPrograms
+        app.get('/api/v1/CulturalPrograms/:culturalProgramsId', auth.getCulturalProgramsById);                                   // view CulturalPrograms
+        app.put('/api/v1/CulturalPrograms', upload.single('image'), authJwt.verifyToken, auth.updateCulturalPrograms);// edit CulturalPrograms
+        app.delete("/api/v1/CulturalPrograms/:id", authJwt.verifyToken, auth.deleteCulturalPrograms);                            // delete CulturalPrograms
+        app.get('/api/v1/CulturalPrograms', auth.getAllCulturalPrograms);                                                        // all CulturalPrograms
 }

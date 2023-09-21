@@ -5,6 +5,7 @@ const bookCabs = require('../model/BookCabs/bookCabs');
 const ChairmanDeskAboutFaiSeminarTheme = require('../model/ChairmanDeskAboutFaiSeminarTheme/ChairmanDeskAboutFaiSeminarTheme');
 const company = require('../model/company/company');
 const CompanyCategory = require('../model/company/companyCategoryModel');
+const culturalProgram = require('../model/CulturalProgram/culturalProgram');
 const delegate = require('../model/Delegate/delegate');
 const dgDesk = require('../model/dgDesk/dgDesk');
 const eventCategory = require('../model/Event/1eventCategory');
@@ -3878,5 +3879,103 @@ exports.getAllSeminarTheme = async (req, res) => {
         } catch (error) {
                 console.error(error);
                 return res.status(500).json({ error: 'Failed to fetch ChairmanDesk' });
+        }
+};
+exports.createCulturalPrograms = async (req, res) => {
+        try {
+                const { title, heading, description, } = req.body;
+                let findCulturalPrograms = await culturalProgram.findOne();
+                if (findCulturalPrograms) {
+                        return res.status(409).json({ status: 409, message: 'Cultural Program already successfully', data: findCulturalPrograms });
+                } else {
+                        let image;
+                        if (req.file) {
+                                image = req.file.path
+                        } else {
+                                return res.status(201).json({ message: "Image require", status: 404, data: {}, });
+                        }
+                        let content = [{
+                                heading: heading,
+                                image: image,
+                                description: description,
+                        }]
+                        let obj = {
+                                title: title,
+                                content: content,
+                        }
+                        const newCategory = await culturalProgram.create(obj);
+                        return res.status(200).json({ status: 200, message: 'Cultural Program created successfully', data: newCategory });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to create Cultural Program' });
+        }
+};
+exports.getCulturalProgramsById = async (req, res) => {
+        try {
+                const culturalProgramsId = req.params.culturalProgramsId;
+                const user = await culturalProgram.findById(culturalProgramsId);
+                if (user) {
+                        return res.status(201).json({ message: "CulturalPrograms found successfully", status: 200, data: user, });
+                }
+                return res.status(201).json({ message: "CulturalPrograms not Found", status: 404, data: {}, });
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: "Failed to retrieve CulturalPrograms" });
+        }
+};
+exports.updateCulturalPrograms = async (req, res) => {
+        try {
+                const { title, heading, description, } = req.body;
+                const findData = await culturalProgram.findOne();
+                if (!findData) {
+                        return res.status(201).json({ message: "Cultural Program not Found", status: 404, data: {}, });
+                }
+                let image;
+                if (req.file) {
+                        image = req.file.path
+                } else {
+                        return res.status(201).json({ message: "Image require", status: 404, data: {}, });
+                }
+                let content = {
+                        heading: heading,
+                        image: image,
+                        description: description,
+                }
+                const newCategory = await culturalProgram.findByIdAndUpdate({ _id: findData._id }, { $set: { title: title || findData.title }, $push: { content: content } }, { new: true });
+                return res.status(200).json({ status: 200, message: 'Cultural Program update successfully', data: newCategory });
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to create Cultural Programs' });
+        }
+};
+exports.deleteCulturalPrograms = async (req, res) => {
+        try {
+                const culturalProgramsId = req.params.id;
+                const user = await culturalProgram.findById(culturalProgramsId);
+                if (user) {
+                        const user1 = await culturalProgram.findByIdAndDelete({ _id: user._id });;
+                        if (user1) {
+                                return res.status(201).json({ message: "Cultural Programs delete successfully.", status: 200, data: {}, });
+                        }
+                } else {
+                        return res.status(201).json({ message: "Cultural Programs not Found", status: 404, data: {}, });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: "Failed to retrieve Cultural Programs" });
+        }
+};
+exports.getAllCulturalPrograms = async (req, res) => {
+        try {
+                const categories = await culturalProgram.find();
+                if (categories.length > 0) {
+                        return res.status(200).json({ status: 200, message: 'CulturalPrograms found successfully', data: categories });
+                } else {
+                        return res.status(404).json({ status: 404, message: 'CulturalPrograms not found.', data: categories });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to fetch Cultural Programs' });
         }
 };
