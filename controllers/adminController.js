@@ -24,6 +24,7 @@ const appHelpline = require('../model/Helpline/appHelpline');
 const meeting = require('../model/Meeting/meeting');
 const nearByInterestType = require('../model/NearByPlaceAndInterest/nearByInterestType');
 const nearByPlaceAndInterest = require('../model/NearByPlaceAndInterest/nearByPlaceAndInterest');
+const registration = require('../model/Registration/registration');
 const paper = require('../model/Speaker/paper');
 const speaker = require('../model/Speaker/speaker');
 const sponser = require('../model/Sponser/sponser');
@@ -3247,7 +3248,7 @@ exports.deleteNearByPlace = async (req, res) => {
                 const nearByPlaceId = req.params.id;
                 const findData = await nearByPlaceAndInterest.findById({ _id: nearByPlaceId, type: "NearBy" });
                 if (findData) {
-                        const user1 = await nearByPlaceAndInterest.findByIdAndDelete({ _id: user._id });;
+                        const user1 = await nearByPlaceAndInterest.findByIdAndDelete({ _id: findData._id });;
                         if (user1) {
                                 return res.status(201).json({ message: "NearByPlace delete successfully.", status: 200, data: {}, });
                         }
@@ -3977,5 +3978,98 @@ exports.getAllCulturalPrograms = async (req, res) => {
         } catch (error) {
                 console.error(error);
                 return res.status(500).json({ error: 'Failed to fetch Cultural Programs' });
+        }
+};
+exports.createRegistration = async (req, res) => {
+        try {
+                const { seminarFeeInclude, seminarFee, onlineRegistration, dulyFiledregistration, SavingBankACNo, bankNameandAddress, branchCode, IFSCcode, micrCode, faiGstNo, faiPanNo, registrationForm, paymentOptionsHeading, paymentOptions, OnTheSpotRegistration, changeInNames, Cancellation, type } = req.body;
+                let findCompany = await registration.findOne({ type: type });
+                if (findCompany) {
+                        return res.status(409).json({ status: 409, message: 'Registration already successfully', data: {} });
+                } else {
+                        const newCategory = await registration.create(req.body);
+                        return res.status(200).json({ status: 200, message: 'Registration created successfully', data: newCategory });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to create Registration' });
+        }
+};
+exports.getRegistrationById = async (req, res) => {
+        try {
+                const _id = req.params.registrationId;
+                const user = await registration.findById(_id);
+                if (user) {
+                        return res.status(201).json({ message: "Registration found successfully", status: 200, data: user, });
+                }
+                return res.status(201).json({ message: "Registration not Found", status: 404, data: {}, });
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: "Failed to retrieve Registration" });
+        }
+};
+exports.updateRegistration = async (req, res) => {
+        try {
+                const { seminarFeeInclude, seminarFee, onlineRegistration, dulyFiledregistration, SavingBankACNo, bankNameandAddress, branchCode, IFSCcode, micrCode, faiGstNo, faiPanNo, registrationForm, paymentOptionsHeading, paymentOptions, OnTheSpotRegistration, changeInNames, Cancellation, type } = req.body;
+                const _id = req.params.registrationId;
+                const findData = await registration.findById(_id);
+                if (!findData) {
+                        return res.status(201).json({ message: "Registration not Found", status: 404, data: {}, });
+                }
+                let data = {
+                        seminarFeeInclude: seminarFeeInclude || findData.seminarFeeInclude,
+                        seminarFee: seminarFee || findData.seminarFee,
+                        onlineRegistration: onlineRegistration || findData.onlineRegistration,
+                        dulyFiledregistration: dulyFiledregistration || findData.dulyFiledregistration,
+                        SavingBankACNo: SavingBankACNo || findData.SavingBankACNo,
+                        bankNameandAddress: bankNameandAddress || findData.bankNameandAddress,
+                        branchCode: branchCode || findData.branchCode,
+                        IFSCcode: IFSCcode || findData.IFSCcode,
+                        micrCode: micrCode || findData.micrCode,
+                        faiGstNo: faiGstNo || findData.faiGstNo,
+                        faiPanNo: faiPanNo || findData.faiPanNo,
+                        registrationForm: registrationForm || findData.registrationForm,
+                        paymentOptionsHeading: paymentOptionsHeading || findData.paymentOptionsHeading,
+                        paymentOptions: paymentOptions || findData.paymentOptions,
+                        OnTheSpotRegistration: OnTheSpotRegistration || findData.OnTheSpotRegistration,
+                        changeInNames: changeInNames || findData.changeInNames,
+                        Cancellation: Cancellation || findData.Cancellation,
+                        type: findData.type,
+                }
+                const newCategory = await registration.findByIdAndUpdate({ _id: findData._id }, { $set: data }, { new: true });
+                return res.status(200).json({ status: 200, message: 'Registration update successfully', data: newCategory });
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to create Registration' });
+        }
+};
+exports.deleteRegistration = async (req, res) => {
+        try {
+                const registrationId = req.params.id;
+                const findData = await registration.findById({ _id: registrationId, });
+                if (findData) {
+                        const user1 = await registration.findByIdAndDelete({ _id: findData._id });;
+                        if (user1) {
+                                return res.status(201).json({ message: "Registration delete successfully.", status: 200, data: {}, });
+                        }
+                } else {
+                        return res.status(201).json({ message: "Registration not Found", status: 404, data: {}, });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: "Failed to retrieve Registration" });
+        }
+};
+exports.getAllRegistration = async (req, res) => {
+        try {
+                const categories = await registration.find({});
+                if (categories.length > 0) {
+                        return res.status(200).json({ status: 200, message: 'Registration found successfully', data: categories });
+                } else {
+                        return res.status(404).json({ status: 404, message: 'Registration not found.', data: categories });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to fetch Registration' });
         }
 };
