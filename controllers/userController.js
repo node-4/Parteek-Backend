@@ -1,4 +1,4 @@
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const advertisement = require('../model/Advertisement/advertisement');
 const banner = require('../model/Banner/banner');
 const company = require('../model/company/company');
