@@ -3837,7 +3837,7 @@ exports.createSeminarTheme = async (req, res) => {
                 return res.status(500).json({ error: 'Failed to create ChairmanDesk' });
         }
 };
-exports.getSeminarThemeId = async (req, res) => {
+exports.getSeminarThemeById = async (req, res) => {
         try {
                 const chairmanDeskId = req.params.chairmanDeskId;
                 const user = await ChairmanDeskAboutFaiSeminarTheme.findById(chairmanDeskId);
