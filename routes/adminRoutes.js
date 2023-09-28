@@ -189,5 +189,5 @@ module.exports = (app) => {
         app.put('/api/v1/Registration/:registrationId', authJwt.verifyToken, auth.updateRegistration);                           // edit Registration
         app.delete("/api/v1/Registration/:id", authJwt.verifyToken, auth.deleteRegistration);                                    // delete Registration
         app.get('/api/v1/Registration', auth.getAllRegistration);                                                                // all Registration
-
+        app.get('/api/v1/RegistrationbyType/:type', auth.getAllRegistrationbyType);                                                                // all Registration
 }

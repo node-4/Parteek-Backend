@@ -4032,6 +4032,16 @@ exports.updateRegistration = async (req, res) => {
                         paymentOptionsHeading: paymentOptionsHeading || findData.paymentOptionsHeading,
                         paymentOptions: paymentOptions || findData.paymentOptions,
                         OnTheSpotRegistration: OnTheSpotRegistration || findData.OnTheSpotRegistration,
+                        correspondentBank: correspondentBank || findData.correspondentBank,
+                        correspondentBankSWIFTCode: correspondentBankSWIFTCode || findData.correspondentBankSWIFTCode,
+                        beneficiaryBankofUSD: beneficiaryBankofUSD || findData.beneficiaryBankofUSD,
+                        currentAccountNumber: currentAccountNumber || findData.currentAccountNumber,
+                        beneficiaryBankSWIFTCode: beneficiaryBankSWIFTCode || findData.beneficiaryBankSWIFTCode,
+                        beneficiaryBankAddress: beneficiaryBankAddress || findData.beneficiaryBankAddress,
+                        telephoneNumber: telephoneNumber || findData.telephoneNumber,
+                        CitibankIndiaNostroAcNumberwithCitiNY: CitibankIndiaNostroAcNumberwithCitiNY || findData.CitibankIndiaNostroAcNumberwithCitiNY,
+                        BeneficiaryAcNumberNameAddress: BeneficiaryAcNumberNameAddress || findData.BeneficiaryAcNumberNameAddress,
+                        purposeofRemittance: purposeofRemittance || findData.purposeofRemittance,
                         changeInNames: changeInNames || findData.changeInNames,
                         Cancellation: Cancellation || findData.Cancellation,
                         type: findData.type,
@@ -4063,6 +4073,19 @@ exports.deleteRegistration = async (req, res) => {
 exports.getAllRegistration = async (req, res) => {
         try {
                 const categories = await registration.find({});
+                if (categories.length > 0) {
+                        return res.status(200).json({ status: 200, message: 'Registration found successfully', data: categories });
+                } else {
+                        return res.status(404).json({ status: 404, message: 'Registration not found.', data: categories });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to fetch Registration' });
+        }
+};
+exports.getAllRegistrationbyType = async (req, res) => {
+        try {
+                const categories = await registration.findOne({ type: req.params.type });
                 if (categories.length > 0) {
                         return res.status(200).json({ status: 200, message: 'Registration found successfully', data: categories });
                 } else {

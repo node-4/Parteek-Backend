@@ -47,6 +47,36 @@ const companyCategorySchema = new mongoose.Schema({
         faiPanNo: {
                 type: String,
         },
+        correspondentBank: {
+                type: String,
+        },
+        correspondentBankSWIFTCode: {
+                type: String,
+        },
+        beneficiaryBankofUSD: {
+                type: String,
+        },
+        currentAccountNumber: {
+                type: String,
+        },
+        beneficiaryBankSWIFTCode: {
+                type: String,
+        },
+        beneficiaryBankAddress: {
+                type: String,
+        },
+        telephoneNumber: {
+                type: String,
+        },
+        CitibankIndiaNostroAcNumberwithCitiNY: {
+                type: String,
+        },
+        BeneficiaryAcNumberNameAddress: {
+                type: String,
+        },
+        purposeofRemittance: {
+                type: String,
+        },
         changeInNames: {
                 type: String,
         },
