@@ -37,7 +37,7 @@ exports.createCompanyCategory = async (req, res) => {
                 const { categoryName, currency, seminarFee, isPublished } = req.body;
                 let findCategory = await CompanyCategory.findOne({ categoryName, currency });
                 if (findCategory) {
-                        return res.status(409).json({ status: 409, message: 'Company category already successfully', data: findCategory });
+                        return res.status(409).json({ status: 409, message: 'Company category already exit', data: {} });
                 } else {
                         const newCategory = await CompanyCategory.create({ categoryName, currency, seminarFee, isPublished, });
                         return res.status(200).json({ status: 200, message: 'Company category created successfully', data: newCategory });
@@ -294,7 +294,7 @@ exports.createCompany = async (req, res) => {
                 }
                 let findCompany = await company.findOne({ companyCategoryId, companyName, companyCode, address1, countryId, stateCityId, companyNameOnBatch, });
                 if (findCompany) {
-                        return res.status(409).json({ status: 409, message: 'Company category already successfully', data: findCategory });
+                        return res.status(409).json({ status: 409, message: 'Company category already exit', data: {} });
                 } else {
                         const newCategory = await company.create(req.body);
                         return res.status(200).json({ status: 200, message: 'company created successfully', data: newCategory });
@@ -396,7 +396,7 @@ exports.createEventCategory = async (req, res) => {
                 const { eventCategoryName, showInOrder, isPublished } = req.body;
                 let findCategory = await eventCategory.findOne({ eventCategoryName, showInOrder });
                 if (findCategory) {
-                        return res.status(409).json({ status: 409, message: 'Event category already successfully', data: findCategory });
+                        return res.status(409).json({ status: 409, message: 'Event category already exit', data: {} });
                 } else {
                         const newCategory = await eventCategory.create({ eventCategoryName, showInOrder, isPublished, });
                         return res.status(200).json({ status: 200, message: 'Event category created successfully', data: newCategory });
@@ -478,7 +478,7 @@ exports.createEventOrganiser = async (req, res) => {
                 }
                 let findCompany = await eventOrganiser.findOne({ shortName, orgName });
                 if (findCompany) {
-                        return res.status(409).json({ status: 409, message: 'EventOrganiser already successfully', data: findCategory });
+                        return res.status(409).json({ status: 409, message: 'EventOrganiser already exit', data: {} });
                 } else {
                         if (req.file) {
                                 req.body.logo = req.file.path
@@ -598,7 +598,7 @@ exports.createEvent = async (req, res) => {
                 }
                 let findCompany = await event.findOne({ eventOrganiserId, eventCategoryId, eventName });
                 if (findCompany) {
-                        return res.status(409).json({ status: 409, message: 'Event already successfully', data: findCategory });
+                        return res.status(409).json({ status: 409, message: 'Event already exit', data: {} });
                 } else {
                         if (req.file) {
                                 req.body.mobileAppIcon = req.file.path
@@ -741,7 +741,7 @@ exports.createEventSession = async (req, res) => {
                 }
                 let findCompany = await eventSession.findOne({ eventId, sessionName, sessionTitle });
                 if (findCompany) {
-                        return res.status(409).json({ status: 409, message: 'Event Session already successfully', data: findCategory });
+                        return res.status(409).json({ status: 409, message: 'Event Session already exit', data: {} });
                 } else {
                         const d = new Date(req.body.sessionDate);
                         req.body.sessionDate = d.toISOString();
@@ -847,7 +847,7 @@ exports.createPaper = async (req, res) => {
                 }
                 let findCompany = await paper.findOne({ eventId, abstractPaperTitle });
                 if (findCompany) {
-                        return res.status(409).json({ status: 409, message: 'Paper already successfully', data: findCategory });
+                        return res.status(409).json({ status: 409, message: 'Paper already exit', data: {} });
                 } else {
                         const newCategory = await paper.create(req.body);
                         return res.status(200).json({ status: 200, message: 'Paper created successfully', data: newCategory });
@@ -960,7 +960,7 @@ exports.createSpeaker = async (req, res) => {
                 }
                 let findSpeaker = await speaker.findOne({ eventId, speakerName });
                 if (findSpeaker) {
-                        return res.status(409).json({ status: 409, message: 'Speaker already successfully', data: findCategory });
+                        return res.status(409).json({ status: 409, message: 'Speaker already exit', data: {} });
                 } else {
                         if (req.file) {
                                 req.body.profilePic = req.file.path
@@ -1103,7 +1103,7 @@ exports.createSponser = async (req, res) => {
                 }
                 let findSpeaker = await sponser.findOne({ eventId, sponserType, sponserName, sponserCountryId, sponserCityId, pinCode });
                 if (findSpeaker) {
-                        return res.status(409).json({ status: 409, message: 'Sponser already successfully', data: findCategory });
+                        return res.status(409).json({ status: 409, message: 'Sponser already exit', data: {} });
                 } else {
                         if (req.file) {
                                 req.body.sponserLogo = req.file.path
@@ -1256,7 +1256,7 @@ exports.createExhibitor = async (req, res) => {
                 }
                 let findCompany = await exhibitor.findOne({ exhibitorName, eventId, exhibitorCountryId, exhibitorCityId });
                 if (findCompany) {
-                        return res.status(409).json({ status: 409, message: 'Exhibitor already successfully', data: findCategory });
+                        return res.status(409).json({ status: 409, message: 'Exhibitor already exit', data: {} });
                 } else {
                         if (req.file) {
                                 req.body.exhibitorLogo = req.file.path
@@ -1402,7 +1402,7 @@ exports.createEventSchedule = async (req, res) => {
                 if (sponser2) { const findSponser2 = await sponser.findById(sponser2); if (!findSponser2) { return res.status(404).json({ status: 404, message: 'Sponser2 not found' }); } }
                 let findCompany = await eventSchedule.findOne({ eventId, eventSessionId, programTitle, programDate, programFromTime, programToTime });
                 if (findCompany) {
-                        return res.status(409).json({ status: 409, message: 'EventSchedule already successfully', data: findCategory });
+                        return res.status(409).json({ status: 409, message: 'EventSchedule already exit', data: {} });
                 } else {
                         if (req.file) {
                                 req.body.smallIcon = req.file.path
@@ -1541,7 +1541,7 @@ exports.createDelegate = async (req, res) => {
                 }
                 let findDelegate = await delegate.findOne({ eventId, companyId, delegateCategoryId, email, delegateTitle, firstName, delegateLoginId, address1 });
                 if (findDelegate) {
-                        return res.status(409).json({ status: 409, message: 'Delegate already successfully', data: findCategory });
+                        return res.status(409).json({ status: 409, message: 'Delegate already exit', data: {} });
                 } else {
                         if (req.file) {
                                 req.body.profilePic = req.file.path
@@ -1581,7 +1581,7 @@ exports.updateDelegate = async (req, res) => {
                 if (cityId) { const findstateCityId = await Location.findById(cityId); if (!findstateCityId) { return res.status(404).json({ status: 404, message: 'StateCity not found' }); } }
                 if (countryId) { const findCountry = await Location.findById(countryId); if (!findCountry) { return res.status(404).json({ status: 404, message: 'country not found' }); } }
                 let findDelegate = await delegate.findOne({ _id: { $ne: findData._id }, eventId, companyId, delegateCategoryId, email, delegateTitle, firstName, delegateLoginId, address1 });
-                if (findDelegate) { return res.status(409).json({ status: 409, message: 'Delegate already successfully', data: findCategory }); } else {
+                if (findDelegate) { return res.status(409).json({ status: 409, message: 'Delegate already exit', data: {} }); } else {
                         if (req.file) { req.body.profilePic = req.file.path } else { req.body.profilePic = findData.profilePic };
                         if (delegatePassword) {
                                 req.body.delegatePassword = await bcrypt.hash(delegatePassword, 10);
@@ -1672,7 +1672,7 @@ exports.createHelpline = async (req, res) => {
                 }
                 let findCompany = await helpline.findOne({ eventId, helplineNo, helplineTitle });
                 if (findCompany) {
-                        return res.status(409).json({ status: 409, message: 'Helpline already successfully', data: findCategory });
+                        return res.status(409).json({ status: 409, message: 'Helpline already exit', data: {} });
                 } else {
                         if (lat || long) {
                                 coordinates = [parseFloat(lat), parseFloat(long)]
@@ -1795,7 +1795,7 @@ exports.createFeedbackParameter = async (req, res) => {
                 }
                 let findCompany = await feedbackParameter.findOne({ eventId, feedbackParamTitle });
                 if (findCompany) {
-                        return res.status(409).json({ status: 409, message: 'FeedbackParameter already successfully', data: findCategory });
+                        return res.status(409).json({ status: 409, message: 'FeedbackParameter already exit', data: {} });
                 } else {
                         const newCategory = await feedbackParameter.create(req.body);
                         return res.status(200).json({ status: 200, message: 'FeedbackParameter created successfully', data: newCategory });
@@ -2855,7 +2855,7 @@ exports.createMeeting = async (req, res) => {
                 }
                 let findSpeaker = await meeting.findOne({ eventId, countryId, cityId, title });
                 if (findSpeaker) {
-                        return res.status(409).json({ status: 409, message: 'Meeting already successfully', data: findCategory });
+                        return res.status(409).json({ status: 409, message: 'Meeting already exit', data: {} });
                 } else {
                         const d = new Date(fromDate);
                         req.body.fromDate = d.toISOString();
@@ -3179,7 +3179,7 @@ exports.createNearByPlace = async (req, res) => {
                 }
                 let findCompany = await nearByPlaceAndInterest.findOne({ typeId, name, type: "NearBy" });
                 if (findCompany) {
-                        return res.status(409).json({ status: 409, message: 'NearByPlace already successfully', data: findCategory });
+                        return res.status(409).json({ status: 409, message: 'NearByPlace already exit', data: {} });
                 } else {
                         if (lat || long) {
                                 coordinates = [parseFloat(lat), parseFloat(long)]
@@ -3285,7 +3285,7 @@ exports.createPlaceOfInterest = async (req, res) => {
                 }
                 let findCompany = await nearByPlaceAndInterest.findOne({ typeId, name, type: "Interest" });
                 if (findCompany) {
-                        return res.status(409).json({ status: 409, message: 'NearByPlace already successfully', data: findCategory });
+                        return res.status(409).json({ status: 409, message: 'NearByPlace already exit', data: {} });
                 } else {
                         if (lat || long) {
                                 coordinates = [parseFloat(lat), parseFloat(long)]
