@@ -90,6 +90,7 @@ module.exports = (app) => {
         app.put('/api/v1/UploadAlbum/:uploadAlbumId', upload.single('image'), authJwt.verifyToken, auth.updateUploadAlbum);      // edit UploadAlbum
         app.delete("/api/v1/UploadAlbum/:id", authJwt.verifyToken, auth.deleteUploadAlbum);                                      // delete UploadAlbum
         app.get('/api/v1/UploadAlbum', auth.getAllUploadAlbum);                                                                  // all UploadAlbum
+        app.get('/api/v1/getAllUploadAlbumBydocumentCategory/:documentCategory', auth.getAllUploadAlbumBydocumentCategory);                                                                  // all UploadAlbum
         app.post('/api/v1/Banner', upload.single('image'), authJwt.verifyToken, auth.createBanner);                              // add Banner
         app.get('/api/v1/Banner/:bannerId', auth.getBannerById);                                                                 // view Banner
         app.put('/api/v1/Banner/:bannerId', upload.single('image'), authJwt.verifyToken, auth.updateBanner);                     // edit Banner

@@ -2173,6 +2173,19 @@ exports.getAllUploadAlbum = async (req, res) => {
                 return res.status(500).json({ error: 'Failed to fetch UploadAlbum' });
         }
 };
+exports.getAllUploadAlbumBydocumentCategory = async (req, res) => {
+        try {
+                const categories = await uploadAlbum.find({ documentCategory: req.params.documentCategory });
+                if (categories.length > 0) {
+                        return res.status(200).json({ status: 200, message: 'UploadAlbum found successfully', data: categories });
+                } else {
+                        return res.status(404).json({ status: 404, message: 'UploadAlbum not found.', data: categories });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to fetch UploadAlbum' });
+        }
+};
 exports.createBanner = async (req, res) => {
         try {
                 const { eventId, bannerTitle, bannerDescription, bannerImage, bannerRedirectUrl, isPublished, showInOrder } = req.body;

@@ -94,8 +94,8 @@ const companyCategorySchema = new mongoose.Schema({
                 type: Boolean,
                 default: false,
         },
-        isPublished: {
-                type: Number,
+        isPublished:{
+                type: Boolean,
                 required: false,
         },
         sendMail: {
@@ -103,8 +103,8 @@ const companyCategorySchema = new mongoose.Schema({
                 default: false,
         },
         payment: {
-                type: Number,
-                required: true,
+                type: Boolean,
+                required: false,
         },
         receiptNo: {
                 type: String,
@@ -131,8 +131,8 @@ const companyCategorySchema = new mongoose.Schema({
                 required: false,
         },
         showInOrder: {
-                type: Boolean,
-                default: false,
+                type: String,
+                required: false,
         },
 }, { timestamps: true });
 companyCategorySchema.plugin(mongoosePaginate);
