@@ -115,34 +115,33 @@ exports.getAllCompanyCategories = async (req, res) => {
 exports.createLocation = async (req, res) => {
         try {
                 const { locationType, countryState, locationName } = req.body;
-                if (locationType == "Country") {
-                        let findCategory = await Location.findOne({ locationType, locationName });
-                        if (findCategory) {
-                                return res.status(409).json({ status: 409, message: 'Location already exits', data: findCategory });
+                if (locationType === "Country") {
+                        let findLocation = await Location.findOne({ locationType, locationName });
+                        if (findLocation) {
+                                return res.status(409).json({ status: 409, message: 'Location already exists', data: findLocation });
                         } else {
-                                const savedLocation = await Location.create({ locationType, locationName, });
+                                const savedLocation = await Location.create({ locationType, locationName });
                                 return res.status(200).json({ status: 200, message: 'Location created successfully', location: savedLocation });
                         }
                 } else {
-                        let findCategory = await Location.findOne({ locationType, locationName, countryState });
-                        if (findCategory) {
-                                return res.status(409).json({ status: 409, message: 'Location already exits', data: findCategory });
+                        let findLocation = await Location.findOne({ locationType, locationName, countryState });
+                        if (findLocation) {
+                                return res.status(409).json({ status: 409, message: 'Location already exists', data: findLocation });
                         } else {
-                                if (locationType == "State") {
-                                        let findCategory1 = await Location.findOne({ _id: countryState, locationType: "Country" });
-                                        if (!findCategory1) {
-                                                return res.status(409).json({ status: 409, message: 'Country not found.', data: findCategory1 });
+                                if (locationType === "State") {
+                                        let findCountry = await Location.findOne({ _id: countryState, locationType: "Country" });
+                                        if (!findCountry) {
+                                                return res.status(404).json({ status: 404, message: 'Country not found.', data: findCountry });
                                         } else {
-                                                const savedLocation = await Location.create({ locationType, country: findCategory1._id, locationName, });
+                                                const savedLocation = await Location.create({ locationType, country: findCountry._id, locationName });
                                                 return res.status(200).json({ status: 200, message: 'Location created successfully', location: savedLocation });
                                         }
-                                }
-                                if (locationType == "City") {
-                                        let findCategory1 = await Location.findOne({ _id: countryState, locationType: "State" });
-                                        if (!findCategory1) {
-                                                return res.status(409).json({ status: 409, message: 'State not found.', data: findCategory1 });
+                                } else if (locationType === "City") {
+                                        let findState = await Location.findOne({ _id: countryState, locationType: "State" });
+                                        if (!findState) {
+                                                return res.status(404).json({ status: 404, message: 'State not found.', data: findState });
                                         } else {
-                                                const savedLocation = await Location.create({ locationType, state: countryState, country: findCategory1.country, locationName, });
+                                                const savedLocation = await Location.create({ locationType, state: countryState, country: findState.country, locationName });
                                                 return res.status(200).json({ status: 200, message: 'Location created successfully', location: savedLocation });
                                         }
                                 }
@@ -157,9 +156,9 @@ exports.getAllLocationCountry = async (req, res) => {
         try {
                 const locations = await Location.find({ locationType: "Country" });
                 if (locations.length > 0) {
-                        return res.status(200).json({ status: 200, message: 'Country found successfully', data: locations });
+                        return res.status(200).json({ status: 200, message: 'Countries found successfully', data: locations });
                 } else {
-                        return res.status(404).json({ status: 404, message: 'Country not found.', data: locations });
+                        return res.status(404).json({ status: 404, message: 'No countries found.', data: locations });
                 }
         } catch (error) {
                 console.error(error);
@@ -170,9 +169,9 @@ exports.getAllLocationState = async (req, res) => {
         try {
                 const locations = await Location.find({ country: req.params.country, locationType: "State" });
                 if (locations.length > 0) {
-                        return res.status(200).json({ status: 200, message: 'State found successfully', data: locations });
+                        return res.status(200).json({ status: 200, message: 'States found successfully', data: locations });
                 } else {
-                        return res.status(404).json({ status: 404, message: 'State not found.', data: locations });
+                        return res.status(404).json({ status: 404, message: 'No states found.', data: locations });
                 }
         } catch (error) {
                 console.error(error);
@@ -183,9 +182,9 @@ exports.getAllLocationCityByCountry = async (req, res) => {
         try {
                 const locations = await Location.find({ country: req.params.country, locationType: "City" }).populate([{ path: 'state', select: 'locationName' }, { path: 'country', select: 'locationName' }]);
                 if (locations.length > 0) {
-                        return res.status(200).json({ status: 200, message: 'City found successfully', data: locations });
+                        return res.status(200).json({ status: 200, message: 'Cities found successfully', data: locations });
                 } else {
-                        return res.status(404).json({ status: 404, message: 'City not found.', data: locations });
+                        return res.status(404).json({ status: 404, message: 'No cities found.', data: locations });
                 }
         } catch (error) {
                 console.error(error);
@@ -196,9 +195,9 @@ exports.getAllLocationCityByState = async (req, res) => {
         try {
                 const locations = await Location.find({ state: req.params.state, locationType: "City" }).populate({ path: 'state', select: 'locationName' });
                 if (locations.length > 0) {
-                        return res.status(200).json({ status: 200, message: 'City found successfully', data: locations });
+                        return res.status(200).json({ status: 200, message: 'Cities found successfully', data: locations });
                 } else {
-                        return res.status(404).json({ status: 404, message: 'City not found.', data: locations });
+                        return res.status(404).json({ status: 404, message: 'No cities found.', data: locations });
                 }
         } catch (error) {
                 console.error(error);
@@ -226,44 +225,43 @@ exports.updateLocation = async (req, res) => {
                 if (!location) {
                         return res.status(404).json({ status: 404, message: 'Location not found' });
                 } else {
-                        if (locationType == "Country") {
-                                let findCategory = await Location.findOne({ _id: { $ne: location._id }, locationType, locationName });
-                                if (findCategory) {
-                                        return res.status(409).json({ status: 409, message: 'Location already exits', data: findCategory });
+                        if (locationType === "Country") {
+                                let findLocation = await Location.findOne({ _id: { $ne: location._id }, locationType, locationName });
+                                if (findLocation) {
+                                        return res.status(409).json({ status: 409, message: 'Location already exists', data: findLocation });
                                 } else {
                                         location.locationType = locationType;
                                         location.locationName = locationName;
                                         await location.save();
-                                        return res.status(200).json({ status: 200, message: 'Location update successfully', location: location });
+                                        return res.status(200).json({ status: 200, message: 'Location updated successfully', location: location });
                                 }
                         } else {
-                                let findCategory = await Location.findOne({ _id: { $ne: location._id }, locationType, locationName, countryState });
-                                if (findCategory) {
-                                        return res.status(409).json({ status: 409, message: 'Location already exits', data: findCategory });
+                                let findLocation = await Location.findOne({ _id: { $ne: location._id }, locationType, locationName, countryState });
+                                if (findLocation) {
+                                        return res.status(409).json({ status: 409, message: 'Location already exists', data: findLocation });
                                 } else {
-                                        if (locationType == "State") {
-                                                let findCategory1 = await Location.findOne({ _id: countryState, locationType: "Country" });
-                                                if (!findCategory1) {
-                                                        return res.status(409).json({ status: 409, message: 'Country not found.', data: findCategory1 });
+                                        if (locationType === "State") {
+                                                let findCountry = await Location.findOne({ _id: countryState, locationType: "Country" });
+                                                if (!findCountry) {
+                                                        return res.status(404).json({ status: 404, message: 'Country not found.', data: findCountry });
                                                 } else {
                                                         location.locationType = locationType;
-                                                        location.country = findCategory1._id;
+                                                        location.country = findCountry._id;
                                                         location.locationName = locationName;
                                                         await location.save();
-                                                        return res.status(200).json({ status: 200, message: 'Location update successfully', location: location });
+                                                        return res.status(200).json({ status: 200, message: 'Location updated successfully', location: location });
                                                 }
-                                        }
-                                        if (locationType == "City") {
-                                                let findCategory1 = await Location.findOne({ _id: countryState, locationType: "State" });
-                                                if (!findCategory1) {
-                                                        return res.status(409).json({ status: 409, message: 'State not found.', data: findCategory1 });
+                                        } else if (locationType === "City") {
+                                                let findState = await Location.findOne({ _id: countryState, locationType: "State" });
+                                                if (!findState) {
+                                                        return res.status(404).json({ status: 404, message: 'State not found.', data: findState });
                                                 } else {
                                                         location.locationType = locationType;
-                                                        location.country = findCategory1._id;
-                                                        location.state = location.state;
+                                                        location.country = findState.country;
+                                                        location.state = countryState;
                                                         location.locationName = locationName;
-                                                        await location.save(); await location.save();
-                                                        return res.status(200).json({ status: 200, message: 'Location update successfully', location: location });
+                                                        await location.save();
+                                                        return res.status(200).json({ status: 200, message: 'Location updated successfully', location: location });
                                                 }
                                         }
                                 }
@@ -271,33 +269,38 @@ exports.updateLocation = async (req, res) => {
                 }
         } catch (error) {
                 console.error(error);
-                return res.status(500).json({ status: 500, error: 'Failed to create location' });
+                return res.status(500).json({ status: 500, error: 'Failed to update location' });
         }
 };
 exports.createCompany = async (req, res) => {
         try {
-                const { companyCategoryId, companyName, companyCode, address1, countryId, stateCityId, companyNameOnBatch, pinCode, address2, isdCode, } = req.body;
-                if (!companyCategoryId && !companyName && !companyCode && !address1 && !countryId && !stateCityId && !companyNameOnBatch) {
-                        return res.status(404).json({ message: "Provide require fields  companyCategoryId, companyName, companyCode, address1, countryId, stateCityId, companyNameOnBatch", status: 404, data: {}, });
+                const { companyCategoryId, companyName, companyCode, address1, countryId, stateCityId, companyNameOnBatch, pinCode, address2, isdCode } = req.body;
+
+                if (!companyCategoryId || !companyName || !companyCode || !address1 || !countryId || !stateCityId || !companyNameOnBatch) {
+                        return res.status(400).json({ message: "Provide all required fields: companyCategoryId, companyName, companyCode, address1, countryId, stateCityId, companyNameOnBatch", status: 400, data: {} });
                 }
+
                 const findCompanyCategory = await CompanyCategory.findById(companyCategoryId);
                 if (!findCompanyCategory) {
-                        return res.status(404).json({ message: "Company category not Found", status: 404, data: {}, });
+                        return res.status(404).json({ message: "Company category not found", status: 404, data: {} });
                 }
+
                 const findCountry = await Location.findById(countryId);
                 if (!findCountry) {
-                        return res.status(404).json({ status: 404, message: 'country not found' });
+                        return res.status(404).json({ message: 'Country not found', status: 404, data: {} });
                 }
-                const findstateCityId = await Location.findById(stateCityId);
-                if (!findstateCityId) {
-                        return res.status(404).json({ status: 404, message: 'StateCity not found' });
+
+                const findStateCityId = await Location.findById(stateCityId);
+                if (!findStateCityId) {
+                        return res.status(404).json({ message: 'StateCity not found', status: 404, data: {} });
                 }
-                let findCompany = await company.findOne({ companyCategoryId, companyName, companyCode, address1, countryId, stateCityId, companyNameOnBatch, });
+
+                let findCompany = await company.findOne({ companyCategoryId, companyName, companyCode, address1, countryId, stateCityId, companyNameOnBatch });
                 if (findCompany) {
-                        return res.status(409).json({ status: 409, message: 'Company category already exit', data: {} });
+                        return res.status(409).json({ status: 409, message: 'Company category already exists', data: {} });
                 } else {
                         const newCategory = await company.create(req.body);
-                        return res.status(200).json({ status: 200, message: 'company created successfully', data: newCategory });
+                        return res.status(200).json({ status: 200, message: 'Company created successfully', data: newCategory });
                 }
         } catch (error) {
                 console.error(error);
@@ -309,9 +312,9 @@ exports.getCompanyById = async (req, res) => {
                 const companyId = req.params.companyId;
                 const user = await company.findById(companyId).populate([{ path: 'countryId', select: 'locationName' }, { path: 'stateCityId', select: 'locationName' }, { path: 'companyCategoryId', select: 'categoryName currency seminarFee' }]);
                 if (user) {
-                        return res.status(200).json({ message: "company found successfully", status: 200, data: user, });
+                        return res.status(200).json({ message: "Company found successfully", status: 200, data: user });
                 }
-                return res.status(404).json({ message: "company not Found", status: 404, data: {}, });
+                return res.status(404).json({ message: "Company not found", status: 404, data: {} });
         } catch (error) {
                 console.error(error);
                 return res.status(500).json({ error: "Failed to retrieve company" });
@@ -319,27 +322,39 @@ exports.getCompanyById = async (req, res) => {
 };
 exports.updateCompany = async (req, res) => {
         try {
-                const { companyCategoryId, companyName, companyCode, address1, countryId, stateCityId, companyNameOnBatch, pinCode, address2, isdCode, } = req.body;
+                const { companyCategoryId, companyName, companyCode, address1, countryId, stateCityId, companyNameOnBatch, pinCode, address2, isdCode } = req.body;
                 const companyId = req.params.companyId;
                 const findData = await company.findById(companyId);
+
                 if (!findData) {
-                        return res.status(404).json({ message: "company not Found", status: 404, data: {}, });
+                        return res.status(404).json({ message: "Company not found", status: 404, data: {} });
                 }
+
                 if (companyCategoryId) {
                         const findCompanyCategory = await CompanyCategory.findById(companyCategoryId);
-                        if (!findCompanyCategory) { return res.status(404).json({ message: "Company category not Found", status: 404, data: {}, }); }
+                        if (!findCompanyCategory) {
+                                return res.status(404).json({ message: "Company category not found", status: 404, data: {} });
+                        }
                 }
+
                 if (countryId) {
                         const findCountry = await Location.findById(countryId);
-                        if (!findCountry) { return res.status(404).json({ status: 404, message: 'country not found' }); }
+                        if (!findCountry) {
+                                return res.status(404).json({ status: 404, message: 'Country not found' });
+                        }
                 }
+
                 if (stateCityId) {
-                        const findstateCityId = await Location.findById(stateCityId);
-                        if (!findstateCityId) { return res.status(404).json({ status: 404, message: 'StateCity not found' }); }
+                        const findStateCityId = await Location.findById(stateCityId);
+                        if (!findStateCityId) {
+                                return res.status(404).json({ status: 404, message: 'StateCity not found' });
+                        }
                 }
-                let findCompany = await company.findOne({ _id: { $ne: _id }, companyCategoryId, companyName, companyNameOnBatch, });
+
+                let findCompany = await company.findOne({ _id: { $ne: findData._id }, companyCategoryId, companyName, companyNameOnBatch });
+
                 if (findCompany) {
-                        return res.status(409).json({ status: 409, message: 'Company already Exit', data: findCategory });
+                        return res.status(409).json({ status: 409, message: 'Company already exists', data: findCompany });
                 } else {
                         let data = {
                                 companyCategoryId: companyCategoryId || findData.companyCategoryId,
@@ -352,43 +367,61 @@ exports.updateCompany = async (req, res) => {
                                 address2: address2 || findData.address2,
                                 pinCode: pinCode || findData.pinCode,
                                 isdCode: isdCode || findData.isdCode,
-                        }
+                        };
+
                         const newCategory = await company.findByIdAndUpdate({ _id: findData._id }, { $set: data }, { new: true });
-                        return res.status(200).json({ status: 200, message: 'company update successfully', data: newCategory });
+                        return res.status(200).json({ status: 200, message: 'Company updated successfully', data: newCategory });
                 }
         } catch (error) {
                 console.error(error);
-                return res.status(500).json({ error: 'Failed to create company category' });
+                return res.status(500).json({ error: 'Failed to update company' });
         }
 };
 exports.deleteCompany = async (req, res) => {
         try {
                 const userId = req.params.id;
                 const user = await company.findById(userId);
+
                 if (user) {
-                        const user1 = await company.findByIdAndDelete({ _id: user._id });;
+                        const user1 = await company.findByIdAndDelete({ _id: user._id });
                         if (user1) {
-                                return res.status(200).json({ message: "Company delete successfully.", status: 200, data: {}, });
+                                return res.status(200).json({ message: "Company deleted successfully", status: 200, data: {} });
                         }
                 } else {
-                        return res.status(404).json({ message: "Company not Found", status: 404, data: {}, });
+                        return res.status(404).json({ message: "Company not found", status: 404, data: {} });
                 }
         } catch (error) {
                 console.error(error);
-                return res.status(500).json({ error: "Failed to retrieve Company" });
+                return res.status(500).json({ error: "Failed to retrieve company" });
         }
 };
 exports.getAllCompany = async (req, res) => {
         try {
                 const categories = await company.find();
+
                 if (categories.length > 0) {
-                        return res.status(200).json({ status: 200, message: 'Company found successfully', data: categories });
+                        return res.status(200).json({ status: 200, message: 'Companies found successfully', data: categories });
                 } else {
-                        return res.status(404).json({ status: 404, message: 'Company not found.', data: categories });
+                        return res.status(404).json({ status: 404, message: 'Companies not found', data: categories });
                 }
         } catch (error) {
                 console.error(error);
-                return res.status(500).json({ error: 'Failed to fetch company categories' });
+                return res.status(500).json({ error: 'Failed to fetch companies' });
+        }
+};
+exports.getEventCategoryById = async (req, res) => {
+        try {
+                const userId = req.params.id;
+                const user = await eventCategory.findById(userId);
+
+                if (user) {
+                        return res.status(200).json({ message: "Event category found successfully", status: 200, data: user });
+                }
+
+                return res.status(404).json({ message: "Event category not found", status: 404, data: {} });
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: "Failed to retrieve event category" });
         }
 };
 exports.createEventCategory = async (req, res) => {
@@ -396,9 +429,9 @@ exports.createEventCategory = async (req, res) => {
                 const { eventCategoryName, showInOrder, isPublished } = req.body;
                 let findCategory = await eventCategory.findOne({ eventCategoryName, showInOrder });
                 if (findCategory) {
-                        return res.status(409).json({ status: 409, message: 'Event category already exit', data: {} });
+                        return res.status(409).json({ status: 409, message: 'Event category already exists', data: {} });
                 } else {
-                        const newCategory = await eventCategory.create({ eventCategoryName, showInOrder, isPublished, });
+                        const newCategory = await eventCategory.create({ eventCategoryName, showInOrder, isPublished });
                         return res.status(200).json({ status: 200, message: 'Event category created successfully', data: newCategory });
                 }
         } catch (error) {
@@ -406,85 +439,83 @@ exports.createEventCategory = async (req, res) => {
                 return res.status(500).json({ error: 'Failed to create event category' });
         }
 };
-exports.getEventCategoryById = async (req, res) => {
-        try {
-                const userId = req.params.id;
-                const user = await eventCategory.findById(userId);
-                if (user) {
-                        return res.status(200).json({ message: "Event category found successfully", status: 200, data: user, });
-                }
-                return res.status(404).json({ message: "Event category not Found", status: 404, data: {}, });
-        } catch (error) {
-                console.error(error);
-                return res.status(500).json({ error: "Failed to retrieve Event category" });
-        }
-};
 exports.updateEventCategory = async (req, res) => {
         try {
                 const { id } = req.params;
                 const findCategory = await eventCategory.findById(id);
+
                 if (!findCategory) {
-                        return res.status(404).json({ message: 'Event category not found' });
+                        return res.status(404).json({ message: 'Event category not found', status: 404, data: {} });
                 }
-                const existingUser = await eventCategory.findOne({ _id: { $ne: findCategory._id }, eventCategoryName: req.body.eventCategoryName });
-                if (existingUser) {
-                        return res.status(400).json({ status: 400, message: "already exists" });
+
+                const existingCategory = await eventCategory.findOne({ _id: { $ne: findCategory._id }, eventCategoryName: req.body.eventCategoryName });
+
+                if (existingCategory) {
+                        return res.status(400).json({ status: 400, message: "Event category with the same name already exists" });
                 }
+
                 findCategory.eventCategoryName = req.body.eventCategoryName || findCategory.eventCategoryName;
                 findCategory.showInOrder = req.body.showInOrder || findCategory.showInOrder;
                 findCategory.isPublished = req.body.isPublished || findCategory.isPublished;
+
                 const updatedCategory = await findCategory.save();
                 return res.status(200).json({ message: 'Event category updated successfully', data: updatedCategory });
         } catch (error) {
                 console.error(error);
-                return res.status(500).json({ error: 'Failed to update Event category' });
+                return res.status(500).json({ error: 'Failed to update event category' });
         }
 };
 exports.deleteEventCategory = async (req, res) => {
         try {
                 const userId = req.params.id;
                 const user = await eventCategory.findById(userId);
+
                 if (user) {
-                        const user1 = await eventCategory.findByIdAndDelete({ _id: user._id });;
+                        const user1 = await eventCategory.findByIdAndDelete({ _id: user._id });
                         if (user1) {
-                                return res.status(200).json({ message: "Event category delete successfully.", status: 200, data: {}, });
+                                return res.status(200).json({ message: "Event category deleted successfully", status: 200, data: {} });
                         }
                 } else {
-                        return res.status(201).json({ message: "Event category not Found", status: 404, data: {}, });
+                        return res.status(404).json({ message: "Event category not found", status: 404, data: {} });
                 }
         } catch (error) {
                 console.error(error);
-                return res.status(500).json({ error: "Failed to retrieve Event category" });
+                return res.status(500).json({ error: "Failed to retrieve event category" });
         }
 };
 exports.getAllEventCategories = async (req, res) => {
         try {
                 const categories = await eventCategory.find().sort({ showInOrder: 1 });
+
                 if (categories.length > 0) {
-                        return res.status(200).json({ status: 200, message: 'Event category found successfully', data: categories });
+                        return res.status(200).json({ status: 200, message: 'Event categories found successfully', data: categories });
                 } else {
-                        return res.status(404).json({ status: 404, message: 'Event category not found.', data: categories });
+                        return res.status(404).json({ status: 404, message: 'Event categories not found', data: categories });
                 }
         } catch (error) {
                 console.error(error);
-                return res.status(500).json({ error: 'Failed to fetch company categories' });
+                return res.status(500).json({ error: 'Failed to fetch event categories' });
         }
 };
 exports.createEventOrganiser = async (req, res) => {
         try {
                 const { shortName, orgName, address, contactPerson, contactPersonNo, alternateAddress, isPublished, contactEmail, contactFax } = req.body;
-                if (!shortName && !orgName && !address && !contactPerson && !contactPersonNo && !alternateAddress && !isPublished) {
-                        return res.status(404).json({ message: "Provide require fields  shortName, orgName, address, contactPerson, contactPersonNo, alternateAddress, isPublished", status: 404, data: {}, });
+
+                if (!shortName || !orgName || !address || !contactPerson || !contactPersonNo || !alternateAddress || !isPublished) {
+                        return res.status(400).json({ message: "Provide all required fields: shortName, orgName, address, contactPerson, contactPersonNo, alternateAddress, isPublished", status: 400, data: {} });
                 }
+
                 let findCompany = await eventOrganiser.findOne({ shortName, orgName });
+
                 if (findCompany) {
-                        return res.status(409).json({ status: 409, message: 'EventOrganiser already exit', data: {} });
+                        return res.status(409).json({ status: 409, message: 'EventOrganiser already exists', data: {} });
                 } else {
                         if (req.file) {
-                                req.body.logo = req.file.path
+                                req.body.logo = req.file.path;
                         } else {
-                                return res.status(404).json({ message: "Logo require", status: 404, data: {}, });
+                                return res.status(400).json({ message: "Logo is required", status: 400, data: {} });
                         }
+
                         const newCategory = await eventOrganiser.create(req.body);
                         return res.status(200).json({ status: 200, message: 'EventOrganiser created successfully', data: newCategory });
                 }
@@ -497,10 +528,12 @@ exports.getEventOrganiserById = async (req, res) => {
         try {
                 const eventOrganiserId = req.params.eventOrganiserId;
                 const user = await eventOrganiser.findById(eventOrganiserId);
+
                 if (user) {
-                        return res.status(200).json({ message: "EventOrganiser found successfully", status: 200, data: user, });
+                        return res.status(200).json({ message: "EventOrganiser found successfully", status: 200, data: user });
                 }
-                return res.status(404).json({ message: "EventOrganiser not Found", status: 404, data: {}, });
+
+                return res.status(404).json({ message: "EventOrganiser not found", status: 404, data: {} });
         } catch (error) {
                 console.error(error);
                 return res.status(500).json({ error: "Failed to retrieve EventOrganiser" });
@@ -508,22 +541,27 @@ exports.getEventOrganiserById = async (req, res) => {
 };
 exports.updateEventOrganiser = async (req, res) => {
         try {
-                const { shortName, orgName, address, contactPerson, contactPersonNo, alternateAddress, isPublished, contactEmail, contactFax, } = req.body;
+                const { shortName, orgName, address, contactPerson, contactPersonNo, alternateAddress, isPublished, contactEmail, contactFax } = req.body;
                 const eventOrganiserId = req.params.eventOrganiserId;
                 const findData = await eventOrganiser.findById(eventOrganiserId);
+
                 if (!findData) {
-                        return res.status(404).json({ message: "EventOrganiser not Found", status: 404, data: {}, });
+                        return res.status(404).json({ message: "EventOrganiser not found", status: 404, data: {} });
                 }
-                let findCompany = await eventOrganiser.findOne({ _id: { $ne: findData._id }, shortName, orgName, });
+
+                let findCompany = await eventOrganiser.findOne({ _id: { $ne: findData._id }, shortName, orgName });
+
                 if (findCompany) {
-                        return res.status(409).json({ status: 409, message: 'EventOrganiser already Exit', data: findCategory });
+                        return res.status(409).json({ status: 409, message: 'EventOrganiser already exists', data: findCategory });
                 } else {
                         let logo;
+
                         if (req.file) {
-                                logo = req.file.path
+                                logo = req.file.path;
                         } else {
-                                logo = findData.logo
+                                logo = findData.logo;
                         }
+
                         let data = {
                                 shortName: shortName || findData.shortName,
                                 orgName: orgName || findData.orgName,
@@ -535,30 +573,47 @@ exports.updateEventOrganiser = async (req, res) => {
                                 contactEmail: contactEmail || findData.contactEmail,
                                 logo: logo || findData.logo,
                                 contactFax: contactFax || findData.contactFax,
-                        }
+                        };
+
                         const newCategory = await eventOrganiser.findByIdAndUpdate({ _id: findData._id }, { $set: data }, { new: true });
-                        return res.status(200).json({ status: 200, message: 'EventOrganiser update successfully', data: newCategory });
+                        return res.status(200).json({ status: 200, message: 'EventOrganiser updated successfully', data: newCategory });
                 }
         } catch (error) {
                 console.error(error);
-                return res.status(500).json({ error: 'Failed to create EventOrganiser' });
+                return res.status(500).json({ error: 'Failed to update EventOrganiser' });
         }
 };
 exports.deleteEventOrganiser = async (req, res) => {
         try {
                 const eventOrganiserId = req.params.id;
                 const user = await eventOrganiser.findById(eventOrganiserId);
+
                 if (user) {
-                        const user1 = await eventOrganiser.findByIdAndDelete({ _id: user._id });;
+                        const user1 = await eventOrganiser.findByIdAndDelete({ _id: user._id });
+
                         if (user1) {
-                                return res.status(200).json({ message: "EventOrganiser delete successfully.", status: 200, data: {}, });
+                                return res.status(200).json({ message: "EventOrganiser deleted successfully", status: 200, data: {} });
                         }
                 } else {
-                        return res.status(201).json({ message: "EventOrganiser not Found", status: 404, data: {}, });
+                        return res.status(404).json({ message: "EventOrganiser not found", status: 404, data: {} });
                 }
         } catch (error) {
                 console.error(error);
                 return res.status(500).json({ error: "Failed to retrieve EventOrganiser" });
+        }
+};
+exports.getAllEventOrganisers = async (req, res) => {
+        try {
+                const eventOrganisers = await eventOrganiser.find();
+
+                if (eventOrganisers.length > 0) {
+                        return res.status(200).json({ status: 200, message: 'Event organisers found successfully', data: eventOrganisers });
+                } else {
+                        return res.status(404).json({ status: 404, message: 'Event organisers not found', data: eventOrganisers });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to fetch event organisers' });
         }
 };
 exports.getAllEventOrganiser = async (req, res) => {
@@ -603,7 +658,7 @@ exports.createEvent = async (req, res) => {
                         if (req.file) {
                                 req.body.mobileAppIcon = req.file.path
                         } else {
-                                return res.status(201).json({ message: "Mobile App Icon require", status: 404, data: {}, });
+                                return res.status(201).json({ message: "Mobile App Icon require", status: 201, data: {}, });
                         }
                         if (req.body.lat || req.body.long) {
                                 coordinates = [parseFloat(req.body.lat), parseFloat(req.body.long)]
@@ -709,7 +764,7 @@ exports.deleteEvent = async (req, res) => {
                                 return res.status(200).json({ message: "Event delete successfully.", status: 200, data: {}, });
                         }
                 } else {
-                        return res.status(201).json({ message: "Event not Found", status: 404, data: {}, });
+                        return res.status(404).json({ message: "Event not Found", status: 404, data: {}, });
                 }
         } catch (error) {
                 console.error(error);
@@ -760,7 +815,7 @@ exports.getEventSessionById = async (req, res) => {
                 if (user) {
                         return res.status(200).json({ message: "Event Session found successfully", status: 200, data: user, });
                 }
-                return res.status(201).json({ message: "Event Session not Found", status: 404, data: {}, });
+                return res.status(404).json({ message: "Event Session not Found", status: 404, data: {}, });
         } catch (error) {
                 console.error(error);
                 return res.status(500).json({ error: "Failed to retrieve Event Session" });
@@ -772,7 +827,7 @@ exports.updateEventSession = async (req, res) => {
                 const eventSessionId = req.params.eventSessionId;
                 const findData = await eventSession.findById(eventSessionId);
                 if (!findData) {
-                        return res.status(201).json({ message: "Event Session not Found", status: 404, data: {}, });
+                        return res.status(404).json({ message: "Event Session not Found", status: 404, data: {}, });
                 }
                 if (eventId) {
                         const findEvent = await event.findById(eventId);
@@ -815,7 +870,7 @@ exports.deleteEventSession = async (req, res) => {
                                 return res.status(200).json({ message: "Event Session delete successfully.", status: 200, data: {}, });
                         }
                 } else {
-                        return res.status(201).json({ message: "Event Session not Found", status: 404, data: {}, });
+                        return res.status(404).json({ message: "Event Session not Found", status: 404, data: {}, });
                 }
         } catch (error) {
                 console.error(error);
@@ -839,7 +894,7 @@ exports.createPaper = async (req, res) => {
         try {
                 const { eventId, abstractPaperTitle, author, abstractPaperDescription, abstractPaperUrl, isPublished } = req.body;
                 if (!eventId && !abstractPaperTitle && !isPublished) {
-                        return res.status(201).json({ message: "Provide require fields  eventId, abstractPaperTitle, isPublished", status: 404, data: {}, });
+                        return res.status(404).json({ message: "Provide require fields  eventId, abstractPaperTitle, isPublished", status: 404, data: {}, });
                 }
                 const findEventOrganiser = await event.findById({ _id: eventId });
                 if (!findEventOrganiser) {
@@ -862,9 +917,9 @@ exports.getPaperById = async (req, res) => {
                 const _id = req.params.paperId;
                 const user = await paper.findById(_id);
                 if (user) {
-                        return res.status(201).json({ message: "Paper found successfully", status: 200, data: user, });
+                        return res.status(200).json({ message: "Paper found successfully", status: 200, data: user, });
                 }
-                return res.status(201).json({ message: "Paper not Found", status: 404, data: {}, });
+                return res.status(404).json({ message: "Paper not Found", status: 404, data: {}, });
         } catch (error) {
                 console.error(error);
                 return res.status(500).json({ error: "Failed to retrieve Paper" });
@@ -876,7 +931,7 @@ exports.updatePaper = async (req, res) => {
                 const paperId = req.params.paperId;
                 const findData = await paper.findById(paperId);
                 if (!findData) {
-                        return res.status(201).json({ message: "Paper not Found", status: 404, data: {}, });
+                        return res.status(404).json({ message: "Paper not Found", status: 404, data: {}, });
                 }
                 if (eventId) {
                         const findEvent = await event.findById(eventId);
@@ -911,10 +966,10 @@ exports.deletePaper = async (req, res) => {
                 if (user) {
                         const user1 = await paper.findByIdAndDelete({ _id: user._id });;
                         if (user1) {
-                                return res.status(201).json({ message: "Paper delete successfully.", status: 200, data: {}, });
+                                return res.status(200).json({ message: "Paper delete successfully.", status: 200, data: {}, });
                         }
                 } else {
-                        return res.status(201).json({ message: "Paper not Found", status: 404, data: {}, });
+                        return res.status(404).json({ message: "Paper not Found", status: 404, data: {}, });
                 }
         } catch (error) {
                 console.error(error);
@@ -938,7 +993,7 @@ exports.createSpeaker = async (req, res) => {
         try {
                 const { eventId, speakerTitle, speakerName, companyId, designation, email, contactNo, speakerAbstractId, profilePic, biography, isPublished, showInOrder, listAsspeaker } = req.body;
                 if (!eventId && !speakerName) {
-                        return res.status(201).json({ message: "Provide require fields  eventId, speakerName", status: 404, data: {}, });
+                        return res.status(404).json({ message: "Provide require fields  eventId, speakerName", status: 404, data: {}, });
                 }
                 if (companyId) {
                         const findCompany = await company.findById(companyId);
@@ -965,7 +1020,7 @@ exports.createSpeaker = async (req, res) => {
                         if (req.file) {
                                 req.body.profilePic = req.file.path
                         } else {
-                                return res.status(201).json({ message: "ProfilePic require", status: 404, data: {}, });
+                                return res.status(404).json({ message: "ProfilePic require", status: 404, data: {}, });
                         }
                         const newCategory = await speaker.create(req.body);
                         return res.status(200).json({ status: 200, message: 'Speaker created successfully', data: newCategory });
@@ -980,9 +1035,9 @@ exports.getSpeakerById = async (req, res) => {
                 const speakerId = req.params.speakerId;
                 const user = await speaker.findById(speakerId);
                 if (user) {
-                        return res.status(201).json({ message: "Speaker found successfully", status: 200, data: user, });
+                        return res.status(200).json({ message: "Speaker found successfully", status: 200, data: user, });
                 }
-                return res.status(201).json({ message: "Speaker not Found", status: 404, data: {}, });
+                return res.status(404).json({ message: "Speaker not Found", status: 404, data: {}, });
         } catch (error) {
                 console.error(error);
                 return res.status(500).json({ error: "Failed to retrieve Speaker" });
@@ -994,7 +1049,7 @@ exports.updateSpeaker = async (req, res) => {
                 const speakerId = req.params.speakerId;
                 const findData = await speaker.findById(speakerId);
                 if (!findData) {
-                        return res.status(201).json({ message: "Event not Found", status: 404, data: {}, });
+                        return res.status(404).json({ message: "Event not Found", status: 404, data: {}, });
                 }
                 if (companyId) {
                         const findCompany = await company.findById(companyId);
@@ -1054,10 +1109,10 @@ exports.deleteSpeaker = async (req, res) => {
                 if (user) {
                         const user1 = await speaker.findByIdAndDelete({ _id: user._id });;
                         if (user1) {
-                                return res.status(201).json({ message: "Speaker delete successfully.", status: 200, data: {}, });
+                                return res.status(200).json({ message: "Speaker delete successfully.", status: 200, data: {}, });
                         }
                 } else {
-                        return res.status(201).json({ message: "Speaker not Found", status: 404, data: {}, });
+                        return res.status(404).json({ message: "Speaker not Found", status: 404, data: {}, });
                 }
         } catch (error) {
                 console.error(error);
@@ -1081,7 +1136,7 @@ exports.createSponser = async (req, res) => {
         try {
                 const { eventId, sponserType, sponserName, sponserShortname, sponserLabel, sponserAddress, lat, long, sponserCountryId, sponserCityId, pinCode, sponserLogo, sponserDescription, sponserFromDate, sponserToDate, sponserWebUrl, contactPerson, contactPersonNo, isPublished, showInOrder, meetAt } = req.body;
                 if (!eventId && !sponserType && !sponserName && !sponserCountryId && !sponserCityId && !pinCode) {
-                        return res.status(201).json({ message: "Provide require fields  eventId, sponserType, sponserNam,esponserCountryId, sponserCityId, pinCode", status: 404, data: {}, });
+                        return res.status(404).json({ message: "Provide require fields  eventId, sponserType, sponserNam,esponserCountryId, sponserCityId, pinCode", status: 404, data: {}, });
                 }
                 if (sponserCountryId) {
                         const findCompany = await Location.findById(sponserCountryId);
@@ -1108,7 +1163,7 @@ exports.createSponser = async (req, res) => {
                         if (req.file) {
                                 req.body.sponserLogo = req.file.path
                         } else {
-                                return res.status(201).json({ message: "Sponser Logo require", status: 404, data: {}, });
+                                return res.status(404).json({ message: "Sponser Logo require", status: 404, data: {}, });
                         }
                         if (lat || long) {
                                 coordinates = [parseFloat(lat), parseFloat(long)]
@@ -1141,7 +1196,7 @@ exports.updateSponser = async (req, res) => {
                 const sponserId = req.params.sponserId;
                 const findData = await sponser.findById(sponserId);
                 if (!findData) {
-                        return res.status(201).json({ message: "Sponser not Found", status: 404, data: {}, });
+                        return res.status(404).json({ message: "Sponser not Found", status: 404, data: {}, });
                 }
                 if (sponserCountryId) {
                         const findCompany = await Location.findById(sponserCountryId);
@@ -1213,10 +1268,10 @@ exports.deleteSponser = async (req, res) => {
                 if (user) {
                         const user1 = await sponser.findByIdAndDelete({ _id: user._id });;
                         if (user1) {
-                                return res.status(201).json({ message: "Sponser delete successfully.", status: 200, data: {}, });
+                                return res.status(200).json({ message: "Sponser delete successfully.", status: 200, data: {}, });
                         }
                 } else {
-                        return res.status(201).json({ message: "Sponser not Found", status: 404, data: {}, });
+                        return res.status(404).json({ message: "Sponser not Found", status: 404, data: {}, });
                 }
         } catch (error) {
                 console.error(error);
@@ -1280,9 +1335,9 @@ exports.getExhibitorById = async (req, res) => {
                 const exhibitorId = req.params.exhibitorId;
                 const user = await exhibitor.findById(exhibitorId);
                 if (user) {
-                        return res.status(201).json({ message: "Exhibitor found successfully", status: 200, data: user, });
+                        return res.status(200).json({ message: "Exhibitor found successfully", status: 200, data: user, });
                 }
-                return res.status(201).json({ message: "Exhibitor not Found", status: 404, data: {}, });
+                return res.status(404).json({ message: "Exhibitor not Found", status: 404, data: {}, });
         } catch (error) {
                 console.error(error);
                 return res.status(500).json({ error: "Failed to retrieve Exhibitor" });
@@ -1294,7 +1349,7 @@ exports.updateExhibitor = async (req, res) => {
                 const exhibitorId = req.params.exhibitorId;
                 const findData = await exhibitor.findById(exhibitorId);
                 if (!findData) {
-                        return res.status(201).json({ message: "Exhibitor not Found", status: 404, data: {}, });
+                        return res.status(404).json({ message: "Exhibitor not Found", status: 404, data: {}, });
                 }
                 if (exhibitorCountryId) {
                         const findCountry = await Location.findById(exhibitorCountryId);
@@ -1362,10 +1417,10 @@ exports.deleteExhibitor = async (req, res) => {
                 if (user) {
                         const user1 = await exhibitor.findByIdAndDelete({ _id: user._id });;
                         if (user1) {
-                                return res.status(201).json({ message: "Exhibitor delete successfully.", status: 200, data: {}, });
+                                return res.status(200).json({ message: "Exhibitor delete successfully.", status: 200, data: {}, });
                         }
                 } else {
-                        return res.status(201).json({ message: "Exhibitor not Found", status: 404, data: {}, });
+                        return res.status(404).json({ message: "Exhibitor not Found", status: 404, data: {}, });
                 }
         } catch (error) {
                 console.error(error);
@@ -1407,7 +1462,7 @@ exports.createEventSchedule = async (req, res) => {
                         if (req.file) {
                                 req.body.smallIcon = req.file.path
                         } else {
-                                return res.status(201).json({ message: "Event Schedule Logo Icon require", status: 404, data: {}, });
+                                return res.status(404).json({ message: "Event Schedule Logo Icon require", status: 404, data: {}, });
                         }
                         const newCategory = await eventSchedule.create(req.body);
                         return res.status(200).json({ status: 200, message: 'Event Schedule created successfully', data: newCategory });
@@ -1422,9 +1477,9 @@ exports.getEventScheduleById = async (req, res) => {
                 const eventScheduleId = req.params.eventScheduleId;
                 const user = await eventSchedule.findById(eventScheduleId);
                 if (user) {
-                        return res.status(201).json({ message: "EventSchedule found successfully", status: 200, data: user, });
+                        return res.status(200).json({ message: "EventSchedule found successfully", status: 200, data: user, });
                 }
-                return res.status(201).json({ message: "EventSchedule not Found", status: 404, data: {}, });
+                return res.status(404).json({ message: "EventSchedule not Found", status: 404, data: {}, });
         } catch (error) {
                 console.error(error);
                 return res.status(500).json({ error: "Failed to retrieve EventSchedule" });
@@ -1434,7 +1489,7 @@ exports.updateEventSchedule = async (req, res) => {
         try {
                 const { eventId, eventSessionId, programTitle, programDescription, programDate, programFromTime, programToTime, isShowTime, speaker1, speaker2, speaker3, speaker4, speaker5, sponser1, sponser2, showInOrder, smallIcon, programWebUrl, isPublished } = req.body;
                 const eventScheduleId = req.params.eventScheduleId;
-                const findData = await eventSchedule.findById(eventScheduleId); if (!findData) { return res.status(201).json({ message: "EventSchedule not Found", status: 404, data: {}, }); }
+                const findData = await eventSchedule.findById(eventScheduleId); if (!findData) { return res.status(404).json({ message: "EventSchedule not Found", status: 404, data: {}, }); }
                 if (eventId) { const findEvent = await event.findById(eventId); if (!findEvent) { return res.status(404).json({ status: 404, message: 'Event not found' }); } }
                 if (eventSessionId) { const findSession = await eventSession.findById(eventSessionId); if (!findSession) { return res.status(404).json({ status: 404, message: 'Event Session not found' }); } }
                 if (speaker1) { const findSpeaker1 = await speaker.findById(speaker1); if (!findSpeaker1) { return res.status(404).json({ status: 404, message: 'Speaker1 not found' }); } }
@@ -1490,10 +1545,10 @@ exports.deleteEventSchedule = async (req, res) => {
                 if (user) {
                         const user1 = await eventSchedule.findByIdAndDelete({ _id: user._id });;
                         if (user1) {
-                                return res.status(201).json({ message: "EventSchedule delete successfully.", status: 200, data: {}, });
+                                return res.status(200).json({ message: "EventSchedule delete successfully.", status: 200, data: {}, });
                         }
                 } else {
-                        return res.status(201).json({ message: "EventSchedule not Found", status: 404, data: {}, });
+                        return res.status(404).json({ message: "EventSchedule not Found", status: 404, data: {}, });
                 }
         } catch (error) {
                 console.error(error);
@@ -1546,7 +1601,7 @@ exports.createDelegate = async (req, res) => {
                         if (req.file) {
                                 req.body.profilePic = req.file.path
                         } else {
-                                return res.status(201).json({ message: "Profile Pic require", status: 404, data: {}, });
+                                return res.status(201).json({ message: "Profile Pic require", status: 201, data: {}, });
                         }
                         req.body.delegatePassword = await bcrypt.hash(delegatePassword, 10);
                         const newCategory = await delegate.create(req.body);
@@ -1562,9 +1617,9 @@ exports.getDelegateById = async (req, res) => {
                 const delegateId = req.params.delegateId;
                 const user = await delegate.findById(delegateId);
                 if (user) {
-                        return res.status(201).json({ message: "Delegate found successfully", status: 200, data: user, });
+                        return res.status(200).json({ message: "Delegate found successfully", status: 200, data: user, });
                 }
-                return res.status(201).json({ message: "Delegate not Found", status: 404, data: {}, });
+                return res.status(404).json({ message: "Delegate not Found", status: 404, data: {}, });
         } catch (error) {
                 console.error(error);
                 return res.status(500).json({ error: "Failed to retrieve Delegate" });
@@ -1637,10 +1692,10 @@ exports.deleteDelegate = async (req, res) => {
                 if (user) {
                         const user1 = await delegate.findByIdAndDelete({ _id: user._id });;
                         if (user1) {
-                                return res.status(201).json({ message: "Delegate delete successfully.", status: 200, data: {}, });
+                                return res.status(200).json({ message: "Delegate delete successfully.", status: 200, data: {}, });
                         }
                 } else {
-                        return res.status(201).json({ message: "Delegate not Found", status: 404, data: {}, });
+                        return res.status(404).json({ message: "Delegate not Found", status: 404, data: {}, });
                 }
         } catch (error) {
                 console.error(error);
@@ -1695,9 +1750,9 @@ exports.getHelplineById = async (req, res) => {
                 const _id = req.params.helplineId;
                 const user = await helpline.findById(_id);
                 if (user) {
-                        return res.status(201).json({ message: "Helpline found successfully", status: 200, data: user, });
+                        return res.status(200).json({ message: "Helpline found successfully", status: 200, data: user, });
                 }
-                return res.status(201).json({ message: "Helpline not Found", status: 404, data: {}, });
+                return res.status(404).json({ message: "Helpline not Found", status: 404, data: {}, });
         } catch (error) {
                 console.error(error);
                 return res.status(500).json({ error: "Failed to retrieve Helpline" });
@@ -1709,7 +1764,7 @@ exports.updateHelpline = async (req, res) => {
                 const helplineId = req.params.helplineId;
                 const findData = await helpline.findById(helplineId);
                 if (!findData) {
-                        return res.status(201).json({ message: "Helpline not Found", status: 404, data: {}, });
+                        return res.status(404).json({ message: "Helpline not Found", status: 404, data: {}, });
                 }
                 if (eventId) {
                         const findEvent = await event.findById(eventId);
@@ -1760,10 +1815,10 @@ exports.deleteHelpline = async (req, res) => {
                 if (user) {
                         const user1 = await helpline.findByIdAndDelete({ _id: user._id });;
                         if (user1) {
-                                return res.status(201).json({ message: "Helpline delete successfully.", status: 200, data: {}, });
+                                return res.status(200).json({ message: "Helpline delete successfully.", status: 200, data: {}, });
                         }
                 } else {
-                        return res.status(201).json({ message: "Helpline not Found", status: 404, data: {}, });
+                        return res.status(404).json({ message: "Helpline not Found", status: 404, data: {}, });
                 }
         } catch (error) {
                 console.error(error);
@@ -1787,7 +1842,7 @@ exports.createFeedbackParameter = async (req, res) => {
         try {
                 const { eventId, feedbackParamTitle, feedbackParamDesc, isPublished, showInOrder } = req.body;
                 if (!eventId && !feedbackParamTitle) {
-                        return res.status(201).json({ message: "Provide require fields  eventId, feedbackParamTitle", status: 404, data: {}, });
+                        return res.status(201).json({ message: "Provide require fields  eventId, feedbackParamTitle", status: 201, data: {}, });
                 }
                 const findEvent = await event.findById({ _id: eventId });
                 if (!findEvent) {
@@ -1810,9 +1865,9 @@ exports.getFeedbackParameterById = async (req, res) => {
                 const _id = req.params.feedbackParameterId;
                 const user = await feedbackParameter.findById(_id);
                 if (user) {
-                        return res.status(201).json({ message: "FeedbackParameter found successfully", status: 200, data: user, });
+                        return res.status(201).json({ message: "FeedbackParameter found successfully", status: 201, data: user, });
                 }
-                return res.status(201).json({ message: "FeedbackParameter not Found", status: 404, data: {}, });
+                return res.status(201).json({ message: "FeedbackParameter not Found", status: 201, data: {}, });
         } catch (error) {
                 console.error(error);
                 return res.status(500).json({ error: "Failed to retrieve FeedbackParameter" });
@@ -1824,7 +1879,7 @@ exports.updateFeedbackParameter = async (req, res) => {
                 const feedbackParameterId = req.params.feedbackParameterId;
                 const findData = await feedbackParameter.findById(feedbackParameterId);
                 if (!findData) {
-                        return res.status(201).json({ message: "FeedbackParameter not Found", status: 404, data: {}, });
+                        return res.status(201).json({ message: "FeedbackParameter not Found", status: 201, data: {}, });
                 }
                 if (eventId) {
                         const findEvent = await event.findById(eventId);
@@ -1858,10 +1913,10 @@ exports.deleteFeedbackParameter = async (req, res) => {
                 if (user) {
                         const user1 = await feedbackParameter.findByIdAndDelete({ _id: user._id });;
                         if (user1) {
-                                return res.status(201).json({ message: "FeedbackParameter delete successfully.", status: 200, data: {}, });
+                                return res.status(200).json({ message: "FeedbackParameter delete successfully.", status: 200, data: {}, });
                         }
                 } else {
-                        return res.status(201).json({ message: "FeedbackParameter not Found", status: 404, data: {}, });
+                        return res.status(404).json({ message: "FeedbackParameter not Found", status: 404, data: {}, });
                 }
         } catch (error) {
                 console.error(error);
@@ -1885,7 +1940,7 @@ exports.createAdvertisement = async (req, res) => {
         try {
                 const { eventId, shortName, adTitle, lat, long, address, adLogoPath, adDescription, adCity, adAddress, adFromDate, adToDate, adWebUrl, contactPerson, contactPersonNo, isPublished, showInOrder, } = req.body;
                 if (!eventId && !adTitle) {
-                        return res.status(201).json({ message: "Provide require fields  eventId, adTitle", status: 404, data: {}, });
+                        return res.status(404).json({ message: "Provide require fields  eventId, adTitle", status: 404, data: {}, });
                 }
                 const findEvent = await event.findById({ _id: eventId });
                 if (!findEvent) {
@@ -1916,9 +1971,9 @@ exports.getAdvertisementById = async (req, res) => {
                 const _id = req.params.advertisementId;
                 const user = await advertisement.findById(_id);
                 if (user) {
-                        return res.status(201).json({ message: "Advertisement found successfully", status: 200, data: user, });
+                        return res.status(200).json({ message: "Advertisement found successfully", status: 200, data: user, });
                 }
-                return res.status(201).json({ message: "Advertisement not Found", status: 404, data: {}, });
+                return res.status(404).json({ message: "Advertisement not Found", status: 404, data: {}, });
         } catch (error) {
                 console.error(error);
                 return res.status(500).json({ error: "Failed to retrieve Advertisement" });
@@ -1930,7 +1985,7 @@ exports.updateAdvertisement = async (req, res) => {
                 const advertisementId = req.params.advertisementId;
                 const findData = await advertisement.findById(advertisementId);
                 if (!findData) {
-                        return res.status(201).json({ message: "Advertisement not Found", status: 404, data: {}, });
+                        return res.status(404).json({ message: "Advertisement not Found", status: 404, data: {}, });
                 }
                 if (eventId) {
                         const findEvent = await event.findById(eventId);
@@ -1985,10 +2040,10 @@ exports.deleteAdvertisement = async (req, res) => {
                 if (user) {
                         const user1 = await advertisement.findByIdAndDelete({ _id: user._id });;
                         if (user1) {
-                                return res.status(201).json({ message: "Advertisement delete successfully.", status: 200, data: {}, });
+                                return res.status(200).json({ message: "Advertisement delete successfully.", status: 200, data: {}, });
                         }
                 } else {
-                        return res.status(201).json({ message: "Advertisement not Found", status: 404, data: {}, });
+                        return res.status(404).json({ message: "Advertisement not Found", status: 404, data: {}, });
                 }
         } catch (error) {
                 console.error(error);
@@ -2012,7 +2067,7 @@ exports.createUploadAlbum = async (req, res) => {
         try {
                 const { eventId, documentCategory, title, description, displayImage, isPublished, showInOrder, } = req.body;
                 if (!eventId && !documentCategory) {
-                        return res.status(201).json({ message: "Provide require fields  eventId, documentCategory", status: 404, data: {}, });
+                        return res.status(201).json({ message: "Provide require fields  eventId, documentCategory", status: 201, data: {}, });
                 }
                 const findEvent = await event.findById(eventId);
                 if (!findEvent) {
@@ -2025,7 +2080,7 @@ exports.createUploadAlbum = async (req, res) => {
                         if (req.file) {
                                 req.body.displayImage = req.file.path
                         } else {
-                                return res.status(201).json({ message: "Display image require", status: 404, data: {}, });
+                                return res.status(201).json({ message: "Display image require", status: 201, data: {}, });
                         }
                         const newCategory = await uploadAlbum.create(req.body);
                         return res.status(200).json({ status: 200, message: 'Upload Album created successfully', data: newCategory });
@@ -2040,9 +2095,9 @@ exports.getUploadAlbumById = async (req, res) => {
                 const uploadAlbumId = req.params.uploadAlbumId;
                 const user = await uploadAlbum.findById(uploadAlbumId);
                 if (user) {
-                        return res.status(201).json({ message: "UploadAlbum found successfully", status: 200, data: user, });
+                        return res.status(200).json({ message: "UploadAlbum found successfully", status: 200, data: user, });
                 }
-                return res.status(201).json({ message: "UploadAlbum not Found", status: 404, data: {}, });
+                return res.status(404).json({ message: "UploadAlbum not Found", status: 404, data: {}, });
         } catch (error) {
                 console.error(error);
                 return res.status(500).json({ error: "Failed to retrieve UploadAlbum" });
@@ -2054,7 +2109,7 @@ exports.updateUploadAlbum = async (req, res) => {
                 const uploadAlbumId = req.params.uploadAlbumId;
                 const findData = await uploadAlbum.findById(uploadAlbumId);
                 if (!findData) {
-                        return res.status(201).json({ message: "Upload Album not Found", status: 404, data: {}, });
+                        return res.status(404).json({ message: "Upload Album not Found", status: 404, data: {}, });
                 }
                 if (eventId) {
                         const findEvent = await event.findById(eventId);
@@ -2095,10 +2150,10 @@ exports.deleteUploadAlbum = async (req, res) => {
                 if (user) {
                         const user1 = await uploadAlbum.findByIdAndDelete({ _id: user._id });;
                         if (user1) {
-                                return res.status(201).json({ message: "UploadAlbum delete successfully.", status: 200, data: {}, });
+                                return res.status(200).json({ message: "UploadAlbum delete successfully.", status: 200, data: {}, });
                         }
                 } else {
-                        return res.status(201).json({ message: "UploadAlbum not Found", status: 404, data: {}, });
+                        return res.status(404).json({ message: "UploadAlbum not Found", status: 404, data: {}, });
                 }
         } catch (error) {
                 console.error(error);
@@ -2122,7 +2177,7 @@ exports.createBanner = async (req, res) => {
         try {
                 const { eventId, bannerTitle, bannerDescription, bannerImage, bannerRedirectUrl, isPublished, showInOrder } = req.body;
                 if (!eventId && !bannerTitle && !showInOrder) {
-                        return res.status(201).json({ message: "Provide require fields  eventId, bannerTitle, showInOrder", status: 404, data: {}, });
+                        return res.status(201).json({ message: "Provide require fields  eventId, bannerTitle, showInOrder", status: 201, data: {}, });
                 }
                 const findEvent = await event.findById(eventId);
                 if (!findEvent) {
@@ -2135,7 +2190,7 @@ exports.createBanner = async (req, res) => {
                         if (req.file) {
                                 req.body.bannerImage = req.file.path
                         } else {
-                                return res.status(201).json({ message: "Banner Image require", status: 404, data: {}, });
+                                return res.status(201).json({ message: "Banner Image require", status: 201, data: {}, });
                         }
                         const newCategory = await banner.create(req.body);
                         return res.status(200).json({ status: 200, message: 'Banner created successfully', data: newCategory });
@@ -2150,9 +2205,9 @@ exports.getBannerById = async (req, res) => {
                 const bannerId = req.params.bannerId;
                 const user = await banner.findById(bannerId);
                 if (user) {
-                        return res.status(201).json({ message: "Banner found successfully", status: 200, data: user, });
+                        return res.status(200).json({ message: "Banner found successfully", status: 200, data: user, });
                 }
-                return res.status(201).json({ message: "Banner not Found", status: 404, data: {}, });
+                return res.status(404).json({ message: "Banner not Found", status: 404, data: {}, });
         } catch (error) {
                 console.error(error);
                 return res.status(500).json({ error: "Failed to retrieve Banner" });
@@ -2164,7 +2219,7 @@ exports.updateBanner = async (req, res) => {
                 const bannerId = req.params.bannerId;
                 const findData = await banner.findById(bannerId);
                 if (!findData) {
-                        return res.status(201).json({ message: "Banner not Found", status: 404, data: {}, });
+                        return res.status(404).json({ message: "Banner not Found", status: 404, data: {}, });
                 }
                 if (eventId) {
                         const findEvent = await event.findById(eventId);
@@ -2205,10 +2260,10 @@ exports.deleteBanner = async (req, res) => {
                 if (user) {
                         const user1 = await banner.findByIdAndDelete({ _id: user._id });;
                         if (user1) {
-                                return res.status(201).json({ message: "Banner delete successfully.", status: 200, data: {}, });
+                                return res.status(200).json({ message: "Banner delete successfully.", status: 200, data: {}, });
                         }
                 } else {
-                        return res.status(201).json({ message: "Banner not Found", status: 404, data: {}, });
+                        return res.status(404).json({ message: "Banner not Found", status: 404, data: {}, });
                 }
         } catch (error) {
                 console.error(error);
@@ -2232,7 +2287,7 @@ exports.createDgDesk = async (req, res) => {
         try {
                 const { eventId, message } = req.body;
                 if (!eventId && !message) {
-                        return res.status(201).json({ message: "Provide require fields  eventId, message", status: 404, data: {}, });
+                        return res.status(201).json({ message: "Provide require fields  eventId, message", status: 201, data: {}, });
                 }
                 const findEvent = await event.findById(eventId);
                 if (!findEvent) {
@@ -2256,9 +2311,9 @@ exports.getDgDeskById = async (req, res) => {
                 const dgDeskId = req.params.dgDeskId;
                 const user = await dgDesk.findById({ _id: dgDeskId, type: "DG" });
                 if (user) {
-                        return res.status(201).json({ message: "DgDesk found successfully", status: 200, data: user, });
+                        return res.status(200).json({ message: "DgDesk found successfully", status: 200, data: user, });
                 }
-                return res.status(201).json({ message: "DgDesk not Found", status: 404, data: {}, });
+                return res.status(404).json({ message: "DgDesk not Found", status: 404, data: {}, });
         } catch (error) {
                 console.error(error);
                 return res.status(500).json({ error: "Failed to retrieve DgDesk" });
@@ -2270,7 +2325,7 @@ exports.updateDgDesk = async (req, res) => {
                 const dgDeskId = req.params.dgDeskId;
                 const findData = await dgDesk.findById({ _id: dgDeskId, type: "DG" });
                 if (!findData) {
-                        return res.status(201).json({ message: "DgDesk not Found", status: 404, data: {}, });
+                        return res.status(404).json({ message: "DgDesk not Found", status: 404, data: {}, });
                 }
                 if (eventId) {
                         const findEvent = await event.findById(eventId);
@@ -2302,10 +2357,10 @@ exports.deleteDgDesk = async (req, res) => {
                 if (user) {
                         const user1 = await dgDesk.findByIdAndDelete({ _id: user._id });;
                         if (user1) {
-                                return res.status(201).json({ message: "DgDesk delete successfully.", status: 200, data: {}, });
+                                return res.status(200).json({ message: "DgDesk delete successfully.", status: 200, data: {}, });
                         }
                 } else {
-                        return res.status(201).json({ message: "DgDesk not Found", status: 404, data: {}, });
+                        return res.status(404).json({ message: "DgDesk not Found", status: 404, data: {}, });
                 }
         } catch (error) {
                 console.error(error);
@@ -2329,7 +2384,7 @@ exports.createLocationFact = async (req, res) => {
         try {
                 const { eventId, title, description, isPublished, showInOrder } = req.body;
                 if (!eventId && !title && !description) {
-                        return res.status(201).json({ message: "Provide require fields  eventId, title, description", status: 404, data: {}, });
+                        return res.status(404).json({ message: "Provide require fields  eventId, title, description", status: 404, data: {}, });
                 }
                 const findEvent = await event.findById(eventId);
                 if (!findEvent) {
@@ -2352,9 +2407,9 @@ exports.getLocationFactById = async (req, res) => {
                 const locationFactId = req.params.locationFactId;
                 const user = await locationFact.findById(locationFactId);
                 if (user) {
-                        return res.status(201).json({ message: "LocationFact found successfully", status: 200, data: user, });
+                        return res.status(200).json({ message: "LocationFact found successfully", status: 200, data: user, });
                 }
-                return res.status(201).json({ message: "LocationFact not Found", status: 404, data: {}, });
+                return res.status(404).json({ message: "LocationFact not Found", status: 404, data: {}, });
         } catch (error) {
                 console.error(error);
                 return res.status(500).json({ error: "Failed to retrieve LocationFact" });
@@ -2366,7 +2421,7 @@ exports.updateLocationFact = async (req, res) => {
                 const locationFactId = req.params.locationFactId;
                 const findData = await locationFact.findById(locationFactId);
                 if (!findData) {
-                        return res.status(201).json({ message: "Location Fact not Found", status: 404, data: {}, });
+                        return res.status(404).json({ message: "Location Fact not Found", status: 404, data: {}, });
                 }
                 if (eventId) {
                         const findEvent = await event.findById(eventId);
@@ -2405,10 +2460,10 @@ exports.deleteLocationFact = async (req, res) => {
                 if (user) {
                         const user1 = await locationFact.findByIdAndDelete({ _id: user._id });;
                         if (user1) {
-                                return res.status(201).json({ message: "LocationFact delete successfully.", status: 200, data: {}, });
+                                return res.status(200).json({ message: "LocationFact delete successfully.", status: 200, data: {}, });
                         }
                 } else {
-                        return res.status(201).json({ message: "LocationFact not Found", status: 404, data: {}, });
+                        return res.status(404).json({ message: "LocationFact not Found", status: 404, data: {}, });
                 }
         } catch (error) {
                 console.error(error);
@@ -2432,7 +2487,7 @@ exports.createLocationFactsBanner = async (req, res) => {
         try {
                 const { eventId, bannerTitle, bannerDescr, bannerImage, bannerRedirectUrl, isPublished, showInOrder } = req.body;
                 if (!eventId && !bannerTitle && !showInOrder) {
-                        return res.status(201).json({ message: "Provide require fields  eventId, bannerTitle, showInOrder", status: 404, data: {}, });
+                        return res.status(404).json({ message: "Provide require fields  eventId, bannerTitle, showInOrder", status: 404, data: {}, });
                 }
                 const findEvent = await event.findById(eventId);
                 if (!findEvent) {
@@ -2445,7 +2500,7 @@ exports.createLocationFactsBanner = async (req, res) => {
                         if (req.file) {
                                 req.body.bannerImage = req.file.path
                         } else {
-                                return res.status(201).json({ message: "LocationFactsBanner Image require", status: 404, data: {}, });
+                                return res.status(404).json({ message: "LocationFactsBanner Image require", status: 404, data: {}, });
                         }
                         const newCategory = await locationFactsBanners.create(req.body);
                         return res.status(200).json({ status: 200, message: 'LocationFactsBanner created successfully', data: newCategory });
@@ -2460,9 +2515,9 @@ exports.getLocationFactsBannerById = async (req, res) => {
                 const bannerId = req.params.bannerId;
                 const user = await locationFactsBanners.findById(bannerId);
                 if (user) {
-                        return res.status(201).json({ message: "LocationFactsBanner found successfully", status: 200, data: user, });
+                        return res.status(200).json({ message: "LocationFactsBanner found successfully", status: 200, data: user, });
                 }
-                return res.status(201).json({ message: "LocationFactsBanner not Found", status: 404, data: {}, });
+                return res.status(404).json({ message: "LocationFactsBanner not Found", status: 404, data: {}, });
         } catch (error) {
                 console.error(error);
                 return res.status(500).json({ error: "Failed to retrieve LocationFactsBanner" });
@@ -2474,7 +2529,7 @@ exports.updateLocationFactsBanner = async (req, res) => {
                 const bannerId = req.params.bannerId;
                 const findData = await locationFactsBanners.findById(bannerId);
                 if (!findData) {
-                        return res.status(201).json({ message: "LocationFactsBanner not Found", status: 404, data: {}, });
+                        return res.status(404).json({ message: "LocationFactsBanner not Found", status: 404, data: {}, });
                 }
                 if (eventId) {
                         const findEvent = await event.findById(eventId);
@@ -2515,10 +2570,10 @@ exports.deleteLocationFactsBanner = async (req, res) => {
                 if (user) {
                         const user1 = await locationFactsBanners.findByIdAndDelete({ _id: user._id });;
                         if (user1) {
-                                return res.status(201).json({ message: "LocationFactsBanner delete successfully.", status: 200, data: {}, });
+                                return res.status(200).json({ message: "LocationFactsBanner delete successfully.", status: 200, data: {}, });
                         }
                 } else {
-                        return res.status(201).json({ message: "LocationFactsBanner not Found", status: 404, data: {}, });
+                        return res.status(404).json({ message: "LocationFactsBanner not Found", status: 404, data: {}, });
                 }
         } catch (error) {
                 console.error(error);
@@ -2542,7 +2597,7 @@ exports.createRegistrationDetails = async (req, res) => {
         try {
                 const { eventId, message } = req.body;
                 if (!eventId && !message) {
-                        return res.status(201).json({ message: "Provide require fields  eventId, message", status: 404, data: {}, });
+                        return res.status(201).json({ message: "Provide require fields  eventId, message", status: 201, data: {}, });
                 }
                 const findEvent = await event.findById(eventId);
                 if (!findEvent) {
@@ -2566,9 +2621,9 @@ exports.getRegistrationDetailsById = async (req, res) => {
                 const registrationDetailsId = req.params.registrationDetailsId;
                 const user = await dgDesk.findById({ _id: registrationDetailsId, type: "RegistrationDetails" });
                 if (user) {
-                        return res.status(201).json({ message: "RegistrationDetails found successfully", status: 200, data: user, });
+                        return res.status(200).json({ message: "RegistrationDetails found successfully", status: 200, data: user, });
                 }
-                return res.status(201).json({ message: "RegistrationDetails not Found", status: 404, data: {}, });
+                return res.status(404).json({ message: "RegistrationDetails not Found", status: 404, data: {}, });
         } catch (error) {
                 console.error(error);
                 return res.status(500).json({ error: "Failed to retrieve RegistrationDetails" });
@@ -2580,7 +2635,7 @@ exports.updateRegistrationDetails = async (req, res) => {
                 const registrationDetailsId = req.params.registrationDetailsId;
                 const findData = await dgDesk.findById({ _id: registrationDetailsId, type: "RegistrationDetails" });
                 if (!findData) {
-                        return res.status(201).json({ message: "RegistrationDetails not Found", status: 404, data: {}, });
+                        return res.status(404).json({ message: "RegistrationDetails not Found", status: 404, data: {}, });
                 }
                 if (eventId) {
                         const findEvent = await event.findById(eventId);
@@ -2612,10 +2667,10 @@ exports.deleteRegistrationDetails = async (req, res) => {
                 if (user) {
                         const user1 = await dgDesk.findByIdAndDelete({ _id: user._id });;
                         if (user1) {
-                                return res.status(201).json({ message: "RegistrationDetails delete successfully.", status: 200, data: {}, });
+                                return res.status(200).json({ message: "RegistrationDetails delete successfully.", status: 200, data: {}, });
                         }
                 } else {
-                        return res.status(201).json({ message: "RegistrationDetails not Found", status: 404, data: {}, });
+                        return res.status(404).json({ message: "RegistrationDetails not Found", status: 404, data: {}, });
                 }
         } catch (error) {
                 console.error(error);
@@ -2639,7 +2694,7 @@ exports.createExhibitionDetail = async (req, res) => {
         try {
                 const { eventId, message } = req.body;
                 if (!eventId && !message) {
-                        return res.status(201).json({ message: "Provide require fields  eventId, message", status: 404, data: {}, });
+                        return res.status(404).json({ message: "Provide require fields  eventId, message", status: 404, data: {}, });
                 }
                 const findEvent = await event.findById(eventId);
                 if (!findEvent) {
@@ -2663,9 +2718,9 @@ exports.getExhibitionDetailById = async (req, res) => {
                 const ExhibitionDetailId = req.params.ExhibitionDetailId;
                 const user = await dgDesk.findById({ _id: ExhibitionDetailId, type: "ExhibitionDetail" });
                 if (user) {
-                        return res.status(201).json({ message: "ExhibitionDetail found successfully", status: 200, data: user, });
+                        return res.status(200).json({ message: "ExhibitionDetail found successfully", status: 200, data: user, });
                 }
-                return res.status(201).json({ message: "ExhibitionDetail not Found", status: 404, data: {}, });
+                return res.status(404).json({ message: "ExhibitionDetail not Found", status: 404, data: {}, });
         } catch (error) {
                 console.error(error);
                 return res.status(500).json({ error: "Failed to retrieve ExhibitionDetail" });
@@ -2677,7 +2732,7 @@ exports.updateExhibitionDetail = async (req, res) => {
                 const ExhibitionDetailId = req.params.ExhibitionDetailId;
                 const findData = await dgDesk.findById({ _id: ExhibitionDetailId, type: "ExhibitionDetail" });
                 if (!findData) {
-                        return res.status(201).json({ message: "ExhibitionDetail not Found", status: 404, data: {}, });
+                        return res.status(404).json({ message: "ExhibitionDetail not Found", status: 404, data: {}, });
                 }
                 if (eventId) {
                         const findEvent = await event.findById(eventId);
@@ -2709,10 +2764,10 @@ exports.deleteExhibitionDetail = async (req, res) => {
                 if (user) {
                         const user1 = await dgDesk.findByIdAndDelete({ _id: user._id });;
                         if (user1) {
-                                return res.status(201).json({ message: "ExhibitionDetail delete successfully.", status: 200, data: {}, });
+                                return res.status(200).json({ message: "ExhibitionDetail delete successfully.", status: 200, data: {}, });
                         }
                 } else {
-                        return res.status(201).json({ message: "ExhibitionDetail not Found", status: 404, data: {}, });
+                        return res.status(404).json({ message: "ExhibitionDetail not Found", status: 404, data: {}, });
                 }
         } catch (error) {
                 console.error(error);
@@ -2736,7 +2791,7 @@ exports.createAboutOrganisation = async (req, res) => {
         try {
                 const { eventId, message } = req.body;
                 if (!eventId && !message) {
-                        return res.status(201).json({ message: "Provide require fields  eventId, message", status: 404, data: {}, });
+                        return res.status(404).json({ message: "Provide require fields  eventId, message", status: 404, data: {}, });
                 }
                 const findEvent = await event.findById(eventId);
                 if (!findEvent) {
@@ -2760,9 +2815,9 @@ exports.getAboutOrganisationById = async (req, res) => {
                 const AboutOrganisationId = req.params.AboutOrganisationId;
                 const user = await dgDesk.findById({ _id: AboutOrganisationId, type: "AboutOrganisation" });
                 if (user) {
-                        return res.status(201).json({ message: "AboutOrganisation found successfully", status: 200, data: user, });
+                        return res.status(200).json({ message: "AboutOrganisation found successfully", status: 200, data: user, });
                 }
-                return res.status(201).json({ message: "AboutOrganisation not Found", status: 404, data: {}, });
+                return res.status(404).json({ message: "AboutOrganisation not Found", status: 404, data: {}, });
         } catch (error) {
                 console.error(error);
                 return res.status(500).json({ error: "Failed to retrieve AboutOrganisation" });
@@ -2774,7 +2829,7 @@ exports.updateAboutOrganisation = async (req, res) => {
                 const AboutOrganisationId = req.params.AboutOrganisationId;
                 const findData = await dgDesk.findById({ _id: AboutOrganisationId, type: "AboutOrganisation" });
                 if (!findData) {
-                        return res.status(201).json({ message: "AboutOrganisation not Found", status: 404, data: {}, });
+                        return res.status(404).json({ message: "AboutOrganisation not Found", status: 404, data: {}, });
                 }
                 if (eventId) {
                         const findEvent = await event.findById(eventId);
@@ -2806,10 +2861,10 @@ exports.deleteAboutOrganisation = async (req, res) => {
                 if (user) {
                         const user1 = await dgDesk.findByIdAndDelete({ _id: user._id });;
                         if (user1) {
-                                return res.status(201).json({ message: "AboutOrganisation delete successfully.", status: 200, data: {}, });
+                                return res.status(200).json({ message: "AboutOrganisation delete successfully.", status: 200, data: {}, });
                         }
                 } else {
-                        return res.status(201).json({ message: "AboutOrganisation not Found", status: 404, data: {}, });
+                        return res.status(404).json({ message: "AboutOrganisation not Found", status: 404, data: {}, });
                 }
         } catch (error) {
                 console.error(error);
@@ -2833,7 +2888,7 @@ exports.createMeeting = async (req, res) => {
         try {
                 const { eventId, title, description, fromDate, toDate, fromTime, toTime, countryId, cityId, address, pinCode, isPublished, meetingBy } = req.body;
                 if (!eventId && !countryId && !cityId && !title) {
-                        return res.status(201).json({ message: "Provide require fields  eventId, countryId, cityId, title", status: 404, data: {}, });
+                        return res.status(201).json({ message: "Provide require fields  eventId, countryId, cityId, title", status: 201, data: {}, });
                 }
                 if (countryId) {
                         const findCompany = await Location.findById(countryId);
@@ -2874,9 +2929,9 @@ exports.getMeetingById = async (req, res) => {
                 const meetingId = req.params.meetingId;
                 const user = await meeting.findById(meetingId);
                 if (user) {
-                        return res.status(201).json({ message: "Meeting found successfully", status: 200, data: user, });
+                        return res.status(200).json({ message: "Meeting found successfully", status: 200, data: user, });
                 }
-                return res.status(201).json({ message: "Meeting not Found", status: 404, data: {}, });
+                return res.status(404).json({ message: "Meeting not Found", status: 404, data: {}, });
         } catch (error) {
                 console.error(error);
                 return res.status(500).json({ error: "Failed to retrieve Meeting" });
@@ -2888,7 +2943,7 @@ exports.updateMeeting = async (req, res) => {
                 const meetingId = req.params.meetingId;
                 const findData = await meeting.findById(meetingId);
                 if (!findData) {
-                        return res.status(201).json({ message: "Meeting not Found", status: 404, data: {}, });
+                        return res.status(404).json({ message: "Meeting not Found", status: 404, data: {}, });
                 }
                 if (countryId) {
                         const findCompany = await Location.findById(countryId);
@@ -2950,10 +3005,10 @@ exports.deleteMeeting = async (req, res) => {
                 if (user) {
                         const user1 = await meeting.findByIdAndDelete({ _id: user._id });;
                         if (user1) {
-                                return res.status(201).json({ message: "Meeting delete successfully.", status: 200, data: {}, });
+                                return res.status(200).json({ message: "Meeting delete successfully.", status: 200, data: {}, });
                         }
                 } else {
-                        return res.status(201).json({ message: "Meeting not Found", status: 404, data: {}, });
+                        return res.status(404).json({ message: "Meeting not Found", status: 404, data: {}, });
                 }
         } catch (error) {
                 console.error(error);
@@ -2977,7 +3032,7 @@ exports.createNearByType = async (req, res) => {
         try {
                 const { name, image } = req.body;
                 if (!name) {
-                        return res.status(201).json({ message: "Provide require fields  name", status: 404, data: {}, });
+                        return res.status(201).json({ message: "Provide require fields  name", status: 201, data: {}, });
                 }
                 let findNearByInterestType = await nearByInterestType.findOne({ name, type: "NearBy" });
                 if (findNearByInterestType) {
@@ -2986,7 +3041,7 @@ exports.createNearByType = async (req, res) => {
                         if (req.file) {
                                 req.body.image = req.file.path
                         } else {
-                                return res.status(201).json({ message: "NearByType Image require", status: 404, data: {}, });
+                                return res.status(201).json({ message: "NearByType Image require", status: 201, data: {}, });
                         }
                         req.body.type = "NearBy";
                         const newCategory = await nearByInterestType.create(req.body);
@@ -3002,9 +3057,9 @@ exports.getNearByTypeById = async (req, res) => {
                 const nearByInterestTypeId = req.params.nearByInterestTypeId;
                 const user = await nearByInterestType.findById({ _id: nearByInterestTypeId, type: "NearBy" });
                 if (user) {
-                        return res.status(201).json({ message: "NearByType found successfully", status: 200, data: user, });
+                        return res.status(200).json({ message: "NearByType found successfully", status: 200, data: user, });
                 }
-                return res.status(201).json({ message: "NearByType not Found", status: 404, data: {}, });
+                return res.status(404).json({ message: "NearByType not Found", status: 404, data: {}, });
         } catch (error) {
                 console.error(error);
                 return res.status(500).json({ error: "Failed to retrieve NearByType" });
@@ -3016,7 +3071,7 @@ exports.updateNearByType = async (req, res) => {
                 const nearByInterestTypeId = req.params.nearByInterestTypeId;
                 const findData = await nearByInterestType.findById({ _id: nearByInterestTypeId, type: "NearBy" });
                 if (!findData) {
-                        return res.status(201).json({ message: "NearByType not Found", status: 404, data: {}, });
+                        return res.status(404).json({ message: "NearByType not Found", status: 404, data: {}, });
                 }
                 let findCompany = await nearByInterestType.findOne({ _id: { $ne: findData._id }, name, type: "NearBy", });
                 if (findCompany) {
@@ -3047,10 +3102,10 @@ exports.deleteNearByType = async (req, res) => {
                 if (user) {
                         const user1 = await nearByInterestType.findByIdAndDelete({ _id: user._id });;
                         if (user1) {
-                                return res.status(201).json({ message: "NearByType delete successfully.", status: 200, data: {}, });
+                                return res.status(200).json({ message: "NearByType delete successfully.", status: 200, data: {}, });
                         }
                 } else {
-                        return res.status(201).json({ message: "NearByType not Found", status: 404, data: {}, });
+                        return res.status(404).json({ message: "NearByType not Found", status: 404, data: {}, });
                 }
         } catch (error) {
                 console.error(error);
@@ -3074,7 +3129,7 @@ exports.createInterestType = async (req, res) => {
         try {
                 const { name, image } = req.body;
                 if (!name) {
-                        return res.status(201).json({ message: "Provide require fields  name", status: 404, data: {}, });
+                        return res.status(201).json({ message: "Provide require fields  name", status: 200, data: {}, });
                 }
                 let findNearByInterestType = await nearByInterestType.findOne({ name, type: "Interest" });
                 if (findNearByInterestType) {
@@ -3083,7 +3138,7 @@ exports.createInterestType = async (req, res) => {
                         if (req.file) {
                                 req.body.image = req.file.path
                         } else {
-                                return res.status(201).json({ message: "InterestType Image require", status: 404, data: {}, });
+                                return res.status(404).json({ message: "InterestType Image require", status: 404, data: {}, });
                         }
                         req.body.type = "Interest";
                         const newCategory = await nearByInterestType.create(req.body);
@@ -3099,9 +3154,9 @@ exports.getInterestTypeById = async (req, res) => {
                 const nearByInterestTypeId = req.params.nearByInterestTypeId;
                 const user = await nearByInterestType.findById({ _id: nearByInterestTypeId, type: "Interest" });
                 if (user) {
-                        return res.status(201).json({ message: "InterestType found successfully", status: 200, data: user, });
+                        return res.status(200).json({ message: "InterestType found successfully", status: 200, data: user, });
                 }
-                return res.status(201).json({ message: "InterestType not Found", status: 404, data: {}, });
+                return res.status(404).json({ message: "InterestType not Found", status: 404, data: {}, });
         } catch (error) {
                 console.error(error);
                 return res.status(500).json({ error: "Failed to retrieve InterestType" });
@@ -3113,7 +3168,7 @@ exports.updateInterestType = async (req, res) => {
                 const nearByInterestTypeId = req.params.nearByInterestTypeId;
                 const findData = await nearByInterestType.findById({ _id: nearByInterestTypeId, type: "Interest" });
                 if (!findData) {
-                        return res.status(201).json({ message: "InterestType not Found", status: 404, data: {}, });
+                        return res.status(404).json({ message: "InterestType not Found", status: 404, data: {}, });
                 }
                 let findCompany = await nearByInterestType.findOne({ _id: { $ne: findData._id }, name, type: "Interest", });
                 if (findCompany) {
@@ -3144,10 +3199,10 @@ exports.deleteInterestType = async (req, res) => {
                 if (user) {
                         const user1 = await nearByInterestType.findByIdAndDelete({ _id: user._id });;
                         if (user1) {
-                                return res.status(201).json({ message: "InterestType delete successfully.", status: 200, data: {}, });
+                                return res.status(200).json({ message: "InterestType delete successfully.", status: 200, data: {}, });
                         }
                 } else {
-                        return res.status(201).json({ message: "InterestType not Found", status: 404, data: {}, });
+                        return res.status(404).json({ message: "InterestType not Found", status: 404, data: {}, });
                 }
         } catch (error) {
                 console.error(error);
@@ -3171,7 +3226,7 @@ exports.createNearByPlace = async (req, res) => {
         try {
                 const { name, description, lat, long, typeId } = req.body;
                 if (!name && !typeId) {
-                        return res.status(201).json({ message: "Provide require fields  name, typeId", status: 404, data: {}, });
+                        return res.status(404).json({ message: "Provide require fields  name, typeId", status: 404, data: {}, });
                 }
                 const findData = await nearByInterestType.findById({ _id: typeId, type: "NearBy" });
                 if (!findData) {
@@ -3199,9 +3254,9 @@ exports.getNearByPlaceById = async (req, res) => {
                 const _id = req.params.nearByPlaceId;
                 const user = await nearByPlaceAndInterest.findById(_id);
                 if (user) {
-                        return res.status(201).json({ message: "NearByPlace found successfully", status: 200, data: user, });
+                        return res.status(200).json({ message: "NearByPlace found successfully", status: 200, data: user, });
                 }
-                return res.status(201).json({ message: "NearByPlace not Found", status: 404, data: {}, });
+                return res.status(404).json({ message: "NearByPlace not Found", status: 404, data: {}, });
         } catch (error) {
                 console.error(error);
                 return res.status(500).json({ error: "Failed to retrieve NearByPlace" });
@@ -3213,7 +3268,7 @@ exports.updateNearByPlace = async (req, res) => {
                 const nearByPlaceId = req.params.nearByPlaceId;
                 const findData = await nearByPlaceAndInterest.findById({ _id: nearByPlaceId, type: "NearBy" });
                 if (!findData) {
-                        return res.status(201).json({ message: "NearByPlace not Found", status: 404, data: {}, });
+                        return res.status(404).json({ message: "NearByPlace not Found", status: 404, data: {}, });
                 }
                 if (typeId) {
                         const findData = await nearByInterestType.findById({ _id: typeId, type: "NearBy" });
@@ -3250,10 +3305,10 @@ exports.deleteNearByPlace = async (req, res) => {
                 if (findData) {
                         const user1 = await nearByPlaceAndInterest.findByIdAndDelete({ _id: findData._id });;
                         if (user1) {
-                                return res.status(201).json({ message: "NearByPlace delete successfully.", status: 200, data: {}, });
+                                return res.status(200).json({ message: "NearByPlace delete successfully.", status: 200, data: {}, });
                         }
                 } else {
-                        return res.status(201).json({ message: "NearByPlace not Found", status: 404, data: {}, });
+                        return res.status(404).json({ message: "NearByPlace not Found", status: 404, data: {}, });
                 }
         } catch (error) {
                 console.error(error);
@@ -3277,7 +3332,7 @@ exports.createPlaceOfInterest = async (req, res) => {
         try {
                 const { name, description, lat, long, typeId } = req.body;
                 if (!name && !typeId) {
-                        return res.status(201).json({ message: "Provide require fields  name, typeId", status: 404, data: {}, });
+                        return res.status(404).json({ message: "Provide require fields  name, typeId", status: 404, data: {}, });
                 }
                 const findData = await nearByInterestType.findById({ _id: typeId, type: "Interest" });
                 if (!findData) {
@@ -3305,9 +3360,9 @@ exports.getPlaceOfInterestById = async (req, res) => {
                 const _id = req.params.nearByPlaceId;
                 const user = await nearByPlaceAndInterest.findById(_id);
                 if (user) {
-                        return res.status(201).json({ message: "NearByPlace found successfully", status: 200, data: user, });
+                        return res.status(200).json({ message: "NearByPlace found successfully", status: 200, data: user, });
                 }
-                return res.status(201).json({ message: "NearByPlace not Found", status: 404, data: {}, });
+                return res.status(404).json({ message: "NearByPlace not Found", status: 404, data: {}, });
         } catch (error) {
                 console.error(error);
                 return res.status(500).json({ error: "Failed to retrieve NearByPlace" });
@@ -3319,7 +3374,7 @@ exports.updatePlaceOfInterest = async (req, res) => {
                 const nearByPlaceId = req.params.nearByPlaceId;
                 const findData = await nearByPlaceAndInterest.findById({ _id: nearByPlaceId, type: "Interest" });
                 if (!findData) {
-                        return res.status(201).json({ message: "NearByPlace not Found", status: 404, data: {}, });
+                        return res.status(404).json({ message: "NearByPlace not Found", status: 404, data: {}, });
                 }
                 if (typeId) {
                         const findData = await nearByInterestType.findById({ _id: typeId, type: "Interest" });
@@ -3356,10 +3411,10 @@ exports.deletePlaceOfInterest = async (req, res) => {
                 if (findData) {
                         const user1 = await nearByPlaceAndInterest.findByIdAndDelete({ _id: findData._id });;
                         if (user1) {
-                                return res.status(201).json({ message: "NearByPlace delete successfully.", status: 200, data: {}, });
+                                return res.status(200).json({ message: "NearByPlace delete successfully.", status: 200, data: {}, });
                         }
                 } else {
-                        return res.status(201).json({ message: "NearByPlace not Found", status: 404, data: {}, });
+                        return res.status(404).json({ message: "NearByPlace not Found", status: 404, data: {}, });
                 }
         } catch (error) {
                 console.error(error);
@@ -3389,7 +3444,7 @@ exports.createAppHelpline = async (req, res) => {
                         if (req.file) {
                                 req.body.helplineImage = req.file.path
                         } else {
-                                return res.status(201).json({ message: "Helpline image require", status: 404, data: {}, });
+                                return res.status(404).json({ message: "Helpline image require", status: 404, data: {}, });
                         }
                         const newCategory = await appHelpline.create(req.body);
                         return res.status(200).json({ status: 200, message: 'App Helpline created successfully', data: newCategory });
@@ -3404,9 +3459,9 @@ exports.getAppHelplineById = async (req, res) => {
                 const appHelplineId = req.params.appHelplineId;
                 const user = await appHelpline.findById(appHelplineId);
                 if (user) {
-                        return res.status(201).json({ message: "AppHelpline found successfully", status: 200, data: user, });
+                        return res.status(200).json({ message: "AppHelpline found successfully", status: 200, data: user, });
                 }
-                return res.status(201).json({ message: "AppHelpline not Found", status: 404, data: {}, });
+                return res.status(404).json({ message: "AppHelpline not Found", status: 404, data: {}, });
         } catch (error) {
                 console.error(error);
                 return res.status(500).json({ error: "Failed to retrieve AppHelpline" });
@@ -3418,7 +3473,7 @@ exports.updateAppHelpline = async (req, res) => {
                 const appHelplineId = req.params.appHelplineId;
                 const findData = await appHelpline.findById(appHelplineId);
                 if (!findData) {
-                        return res.status(201).json({ message: "App Helpline not Found", status: 404, data: {}, });
+                        return res.status(404).json({ message: "App Helpline not Found", status: 404, data: {}, });
                 }
                 let findCompany = await appHelpline.findOne({ _id: { $ne: findData._id }, helplineNo, helplineTitle, });
                 if (findCompany) {
@@ -3450,10 +3505,10 @@ exports.deleteAppHelpline = async (req, res) => {
                 if (user) {
                         const user1 = await appHelpline.findByIdAndDelete({ _id: user._id });;
                         if (user1) {
-                                return res.status(201).json({ message: "AppHelpline delete successfully.", status: 200, data: {}, });
+                                return res.status(200).json({ message: "AppHelpline delete successfully.", status: 200, data: {}, });
                         }
                 } else {
-                        return res.status(201).json({ message: "AppHelpline not Found", status: 404, data: {}, });
+                        return res.status(404).json({ message: "AppHelpline not Found", status: 404, data: {}, });
                 }
         } catch (error) {
                 console.error(error);
@@ -3572,7 +3627,7 @@ exports.createBookCabs = async (req, res) => {
                         if (req.file) {
                                 req.body.image = req.file.path
                         } else {
-                                return res.status(201).json({ message: "Image require", status: 404, data: {}, });
+                                return res.status(404).json({ message: "Image require", status: 404, data: {}, });
                         }
                         const newCategory = await bookCabs.create(req.body);
                         return res.status(200).json({ status: 200, message: 'Book Cab created successfully', data: newCategory });
@@ -3587,9 +3642,9 @@ exports.getBookCabsById = async (req, res) => {
                 const bookCabsId = req.params.bookCabsId;
                 const user = await bookCabs.findById(bookCabsId);
                 if (user) {
-                        return res.status(201).json({ message: "BookCabs found successfully", status: 200, data: user, });
+                        return res.status(200).json({ message: "BookCabs found successfully", status: 200, data: user, });
                 }
-                return res.status(201).json({ message: "BookCabs not Found", status: 404, data: {}, });
+                return res.status(404).json({ message: "BookCabs not Found", status: 404, data: {}, });
         } catch (error) {
                 console.error(error);
                 return res.status(500).json({ error: "Failed to retrieve BookCabs" });
@@ -3601,7 +3656,7 @@ exports.updateBookCabs = async (req, res) => {
                 const bookCabsId = req.params.bookCabsId;
                 const findData = await bookCabs.findById(bookCabsId);
                 if (!findData) {
-                        return res.status(201).json({ message: "Book Cab not Found", status: 404, data: {}, });
+                        return res.status(404).json({ message: "Book Cab not Found", status: 404, data: {}, });
                 }
                 let findCompany = await bookCabs.findOne({ _id: { $ne: findData._id }, name, });
                 if (findCompany) {
@@ -3632,10 +3687,10 @@ exports.deleteBookCabs = async (req, res) => {
                 if (user) {
                         const user1 = await bookCabs.findByIdAndDelete({ _id: user._id });;
                         if (user1) {
-                                return res.status(201).json({ message: "BookCabs delete successfully.", status: 200, data: {}, });
+                                return res.status(200).json({ message: "BookCabs delete successfully.", status: 200, data: {}, });
                         }
                 } else {
-                        return res.status(201).json({ message: "BookCabs not Found", status: 404, data: {}, });
+                        return res.status(404).json({ message: "BookCabs not Found", status: 404, data: {}, });
                 }
         } catch (error) {
                 console.error(error);
@@ -3678,7 +3733,7 @@ exports.createChairmanDesk = async (req, res) => {
                         if (req.file) {
                                 req.body.image = req.file.path
                         } else {
-                                return res.status(201).json({ message: "Image require", status: 404, data: {}, });
+                                return res.status(404).json({ message: "Image require", status: 404, data: {}, });
                         }
                         let obj = {
                                 type: "ChairmanDesk",
@@ -3700,9 +3755,9 @@ exports.getChairmanDeskById = async (req, res) => {
                 const chairmanDeskId = req.params.chairmanDeskId;
                 const user = await ChairmanDeskAboutFaiSeminarTheme.findById(chairmanDeskId);
                 if (user) {
-                        return res.status(201).json({ message: "ChairmanDesk found successfully", status: 200, data: user, });
+                        return res.status(200).json({ message: "ChairmanDesk found successfully", status: 200, data: user, });
                 }
-                return res.status(201).json({ message: "ChairmanDesk not Found", status: 404, data: {}, });
+                return res.status(404).json({ message: "ChairmanDesk not Found", status: 404, data: {}, });
         } catch (error) {
                 console.error(error);
                 return res.status(500).json({ error: "Failed to retrieve ChairmanDesk" });
@@ -3715,10 +3770,10 @@ exports.deleteChairmanDesk = async (req, res) => {
                 if (user) {
                         const user1 = await ChairmanDeskAboutFaiSeminarTheme.findByIdAndDelete({ _id: user._id });;
                         if (user1) {
-                                return res.status(201).json({ message: "ChairmanDesk delete successfully.", status: 200, data: {}, });
+                                return res.status(200).json({ message: "ChairmanDesk delete successfully.", status: 200, data: {}, });
                         }
                 } else {
-                        return res.status(201).json({ message: "ChairmanDesk not Found", status: 404, data: {}, });
+                        return res.status(404).json({ message: "ChairmanDesk not Found", status: 404, data: {}, });
                 }
         } catch (error) {
                 console.error(error);
@@ -3771,9 +3826,9 @@ exports.getAboutFaiById = async (req, res) => {
                 const aboutFaiId = req.params.aboutFaiId;
                 const user = await ChairmanDeskAboutFaiSeminarTheme.findById(aboutFaiId);
                 if (user) {
-                        return res.status(201).json({ message: "AboutFai found successfully", status: 200, data: user, });
+                        return res.status(200).json({ message: "AboutFai found successfully", status: 200, data: user, });
                 }
-                return res.status(201).json({ message: "AboutFai not Found", status: 404, data: {}, });
+                return res.status(404).json({ message: "AboutFai not Found", status: 404, data: {}, });
         } catch (error) {
                 console.error(error);
                 return res.status(500).json({ error: "Failed to retrieve AboutFai" });
@@ -3786,10 +3841,10 @@ exports.deleteAboutFai = async (req, res) => {
                 if (user) {
                         const user1 = await ChairmanDeskAboutFaiSeminarTheme.findByIdAndDelete({ _id: user._id });;
                         if (user1) {
-                                return res.status(201).json({ message: "AboutFai delete successfully.", status: 200, data: {}, });
+                                return res.status(200).json({ message: "AboutFai delete successfully.", status: 200, data: {}, });
                         }
                 } else {
-                        return res.status(201).json({ message: "AboutFai not Found", status: 404, data: {}, });
+                        return res.status(404).json({ message: "AboutFai not Found", status: 404, data: {}, });
                 }
         } catch (error) {
                 console.error(error);
