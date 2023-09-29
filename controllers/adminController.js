@@ -1127,9 +1127,9 @@ exports.getSponserById = async (req, res) => {
                 const sponserId = req.params.sponserId;
                 const user = await sponser.findById(sponserId);
                 if (user) {
-                        return res.status(201).json({ message: "Sponser found successfully", status: 200, data: user, });
+                        return res.status(200).json({ message: "Sponser found successfully", status: 200, data: user, });
                 }
-                return res.status(201).json({ message: "Sponser not Found", status: 404, data: {}, });
+                return res.status(404).json({ message: "Sponser not Found", status: 404, data: {}, });
         } catch (error) {
                 console.error(error);
                 return res.status(500).json({ error: "Failed to retrieve Sponser" });
@@ -1240,7 +1240,7 @@ exports.createExhibitor = async (req, res) => {
         try {
                 const { eventId, exhibitorName, exhibitorShortname, exhibitorDescription, exhibitorAddress, exhibitorCountryId, exhibitorCityId, pinCode, lat, long, email, exhibitorLogo, stallNo, exhibitorWebUrl, contactPerson, contactPersonNo, isPublished, showInOrder } = req.body;
                 if (!eventId && !exhibitorName && !exhibitorCountryId && !exhibitorCityId) {
-                        return res.status(201).json({ message: "Provide require fields  eventId, exhibitorName, exhibitorCountryId, exhibitorCityId", status: 404, data: {}, });
+                        return res.status(404).json({ message: "Provide require fields  eventId, exhibitorName, exhibitorCountryId, exhibitorCityId", status: 404, data: {}, });
                 }
                 const findCountry = await Location.findById(exhibitorCountryId);
                 if (!findCountry) {
@@ -1261,7 +1261,7 @@ exports.createExhibitor = async (req, res) => {
                         if (req.file) {
                                 req.body.exhibitorLogo = req.file.path
                         } else {
-                                return res.status(201).json({ message: "Exhibitor Logo Icon require", status: 404, data: {}, });
+                                return res.status(404).json({ message: "Exhibitor Logo Icon require", status: 404, data: {}, });
                         }
                         if (req.body.lat || req.body.long) {
                                 coordinates = [parseFloat(req.body.lat), parseFloat(req.body.long)]
