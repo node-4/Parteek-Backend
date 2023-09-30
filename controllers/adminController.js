@@ -16,6 +16,7 @@ const locationFact = require('../model/EventLocationFacts/locationFact');
 const locationFactsBanners = require('../model/EventLocationFacts/locationFactsBanners')
 const eventSchedule = require('../model/EventSchedule/eventSchedule');
 const exhibitor = require('../model/Exhibitor/Exhibitor');
+const Exhibition = require('../model/Exhibition/Exhibition');
 const feedbackParameter = require('../model/FeedbackParameter/feedbackParameter');
 const Faq = require("../model/FAQ/faq.Model");
 const feedback = require("../model/Feedback/feedback");
@@ -3341,6 +3342,19 @@ exports.getAllNearByPlace = async (req, res) => {
                 return res.status(500).json({ error: 'Failed to fetch NearByPlace' });
         }
 };
+exports.getAllNearByPlaceByTypeId = async (req, res) => {
+        try {
+                const categories = await nearByPlaceAndInterest.find({ typeId: req.params.typeId, type: "NearBy" });
+                if (categories.length > 0) {
+                        return res.status(200).json({ status: 200, message: 'NearByPlace found successfully', data: categories });
+                } else {
+                        return res.status(404).json({ status: 404, message: 'NearByPlace not found.', data: categories });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to fetch NearByPlace' });
+        }
+};
 exports.createPlaceOfInterest = async (req, res) => {
         try {
                 const { name, description, lat, long, typeId } = req.body;
@@ -3437,6 +3451,19 @@ exports.deletePlaceOfInterest = async (req, res) => {
 exports.getAllPlaceOfInterest = async (req, res) => {
         try {
                 const categories = await nearByPlaceAndInterest.find({ type: "Interest" });
+                if (categories.length > 0) {
+                        return res.status(200).json({ status: 200, message: 'NearByPlace found successfully', data: categories });
+                } else {
+                        return res.status(404).json({ status: 404, message: 'NearByPlace not found.', data: categories });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to fetch NearByPlace' });
+        }
+};
+exports.getAllPlaceOfInterestByTypeId = async (req, res) => {
+        try {
+                const categories = await nearByPlaceAndInterest.find({ typeId: req.params.typeId, type: "Interest" });
                 if (categories.length > 0) {
                         return res.status(200).json({ status: 200, message: 'NearByPlace found successfully', data: categories });
                 } else {
@@ -4162,5 +4189,124 @@ exports.getAllRegistrationbyType = async (req, res) => {
         } catch (error) {
                 console.error(error);
                 return res.status(500).json({ error: 'Failed to fetch Registration' });
+        }
+};
+
+
+
+exports.createExhibition = async (req, res) => {
+        try {
+                const { title, faiMmberCompany, nonfaiMmberCompany, descriptionBelowTitle, description, email, tel, telBelowTitle, telBelowHeading, headingArray, reservationTitle, reservationDescription, hotelTitle, hotelPullmanSingle, hotelPullmanDouble, hotelPullmanRoomType, hotelNovotelSingle, hotelNovotelDouble, hotelNovotelRoomType, type } = req.body;
+                let findCompany = await Exhibition.findOne({ type: type });
+                if (findCompany) {
+                        return res.status(409).json({ status: 409, message: 'Exhibition already successfully', data: {} });
+                } else {
+                        const newCategory = await Exhibition.create(req.body);
+                        return res.status(200).json({ status: 200, message: 'Exhibition created successfully', data: newCategory });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to create Exhibition' });
+        }
+};
+exports.getExhibitionById = async (req, res) => {
+        try {
+                const _id = req.params.ExhibitionId;
+                const user = await Exhibition.findById(_id);
+                if (user) {
+                        return res.status(200).json({ message: "Exhibition found successfully", status: 200, data: user, });
+                }
+                return res.status(404).json({ message: "Exhibition not Found", status: 404, data: {}, });
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: "Failed to retrieve Exhibition" });
+        }
+};
+exports.updateExhibition = async (req, res) => {
+        try {
+                const { seminarFeeInclude, seminarFee, onlineRegistration, dulyFiledregistration, SavingBankACNo, bankNameandAddress, branchCode, IFSCcode, micrCode, faiGstNo, faiPanNo, registrationForm, paymentOptionsHeading, paymentOptions, OnTheSpotRegistration, changeInNames, Cancellation, type } = req.body;
+                const _id = req.params.ExhibitionId;
+                const findData = await Exhibition.findById(_id);
+                if (!findData) {
+                        return res.status(404).json({ message: "Registration not Found", status: 404, data: {}, });
+                }
+                let data = {
+                        seminarFeeInclude: seminarFeeInclude || findData.seminarFeeInclude,
+                        seminarFee: seminarFee || findData.seminarFee,
+                        onlineRegistration: onlineRegistration || findData.onlineRegistration,
+                        dulyFiledregistration: dulyFiledregistration || findData.dulyFiledregistration,
+                        SavingBankACNo: SavingBankACNo || findData.SavingBankACNo,
+                        bankNameandAddress: bankNameandAddress || findData.bankNameandAddress,
+                        branchCode: branchCode || findData.branchCode,
+                        IFSCcode: IFSCcode || findData.IFSCcode,
+                        micrCode: micrCode || findData.micrCode,
+                        faiGstNo: faiGstNo || findData.faiGstNo,
+                        faiPanNo: faiPanNo || findData.faiPanNo,
+                        registrationForm: registrationForm || findData.registrationForm,
+                        paymentOptionsHeading: paymentOptionsHeading || findData.paymentOptionsHeading,
+                        paymentOptions: paymentOptions || findData.paymentOptions,
+                        OnTheSpotRegistration: OnTheSpotRegistration || findData.OnTheSpotRegistration,
+                        correspondentBank: correspondentBank || findData.correspondentBank,
+                        correspondentBankSWIFTCode: correspondentBankSWIFTCode || findData.correspondentBankSWIFTCode,
+                        beneficiaryBankofUSD: beneficiaryBankofUSD || findData.beneficiaryBankofUSD,
+                        currentAccountNumber: currentAccountNumber || findData.currentAccountNumber,
+                        beneficiaryBankSWIFTCode: beneficiaryBankSWIFTCode || findData.beneficiaryBankSWIFTCode,
+                        beneficiaryBankAddress: beneficiaryBankAddress || findData.beneficiaryBankAddress,
+                        telephoneNumber: telephoneNumber || findData.telephoneNumber,
+                        CitibankIndiaNostroAcNumberwithCitiNY: CitibankIndiaNostroAcNumberwithCitiNY || findData.CitibankIndiaNostroAcNumberwithCitiNY,
+                        BeneficiaryAcNumberNameAddress: BeneficiaryAcNumberNameAddress || findData.BeneficiaryAcNumberNameAddress,
+                        purposeofRemittance: purposeofRemittance || findData.purposeofRemittance,
+                        changeInNames: changeInNames || findData.changeInNames,
+                        Cancellation: Cancellation || findData.Cancellation,
+                        type: findData.type,
+                }
+                const newCategory = await Exhibition.findByIdAndUpdate({ _id: findData._id }, { $set: data }, { new: true });
+                return res.status(200).json({ status: 200, message: 'Exhibition update successfully', data: newCategory });
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to create Exhibition' });
+        }
+};
+exports.deleteExhibition = async (req, res) => {
+        try {
+                const registrationId = req.params.id;
+                const findData = await Exhibition.findById({ _id: registrationId, });
+                if (findData) {
+                        const user1 = await Exhibition.findByIdAndDelete({ _id: findData._id });;
+                        if (user1) {
+                                return res.status(200).json({ message: "Exhibition delete successfully.", status: 200, data: {}, });
+                        }
+                } else {
+                        return res.status(404).json({ message: "Exhibition not Found", status: 404, data: {}, });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: "Failed to retrieve Exhibition" });
+        }
+};
+exports.getAllExhibition = async (req, res) => {
+        try {
+                const categories = await Exhibition.find({});
+                if (categories.length > 0) {
+                        return res.status(200).json({ status: 200, message: 'Exhibition found successfully', data: categories });
+                } else {
+                        return res.status(404).json({ status: 404, message: 'Exhibition not found.', data: categories });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to fetch Exhibition' });
+        }
+};
+exports.getAllExhibitionbyType = async (req, res) => {
+        try {
+                const categories = await Exhibition.findOne({ type: req.params.type });
+                if (categories.length > 0) {
+                        return res.status(200).json({ status: 200, message: 'Exhibition found successfully', data: categories });
+                } else {
+                        return res.status(404).json({ status: 404, message: 'Exhibition not found.', data: categories });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to fetch Exhibition' });
         }
 };

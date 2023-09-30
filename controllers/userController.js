@@ -128,6 +128,9 @@ exports.update = async (req, res) => {
             if (countryId) { const findCompany = await Location.findById(countryId); if (!findCompany) { return res.status(404).json({ status: 404, message: 'Country not found' }); } }
             if (cityId) { const findEventCategoryId = await Location.findById(cityId); if (!findEventCategoryId) { return res.status(404).json({ status: 404, message: 'City not found' }); } }
             if (password) { hashedPassword = await bcrypt.hash(password, 10); }
+            if (req.file) {
+                req.body.profilePic = req.file.path;
+            } 
             let obj = {
                 typeofMember: typeofMember || user.typeofMember,
                 username: username || user.username,
@@ -139,6 +142,7 @@ exports.update = async (req, res) => {
                 address2: address2 || user.address2,
                 countryId: countryId || user.countryId,
                 cityId: cityId || user.cityId,
+                profilePic: req.body.profilePic || user.profilePic,
                 bio: bio || user.bio,
                 pinCode: pinCode || user.pinCode,
                 showEmail: showEmail || user.showEmail,

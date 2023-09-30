@@ -54,6 +54,9 @@ const userSchema = new mongoose.Schema({
     pinCode: {
         type: String,
     },
+    profilePic: {
+        type: String,
+    },
     showEmail: {
         type: Boolean,
         default: false,

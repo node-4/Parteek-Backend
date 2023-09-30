@@ -146,12 +146,14 @@ module.exports = (app) => {
         app.put('/api/v1/NearByPlace/:nearByPlaceId', authJwt.verifyToken, auth.updateNearByPlace);                              // edit NearByPlace
         app.delete("/api/v1/NearByPlace/:id", authJwt.verifyToken, auth.deleteNearByPlace);                                      // delete NearByPlace
         app.get('/api/v1/NearByPlace', auth.getAllNearByPlace);                                                                  // all NearByPlace
+        app.get('/api/v1/getAllNearByPlaceByTypeId/:typeId', auth.getAllNearByPlaceByTypeId);                                                                  // all NearByPlace
         app.post('/api/v1/PlaceOfInterest', authJwt.verifyToken, auth.createPlaceOfInterest);                                    // add PlaceOfInterest
         app.get('/api/v1/PlaceOfInterest/:nearByPlaceId', auth.getPlaceOfInterestById);                                          // view PlaceOfInterest
         app.put('/api/v1/PlaceOfInterest/:nearByPlaceId', authJwt.verifyToken, auth.updatePlaceOfInterest);                      // edit PlaceOfInterest
         app.delete("/api/v1/PlaceOfInterest/:id", authJwt.verifyToken, auth.deletePlaceOfInterest);                              // delete PlaceOfInterest
         app.get('/api/v1/PlaceOfInterest', auth.getAllPlaceOfInterest);                                                          // all PlaceOfInterest
         app.post('/api/v1/AppHelpline', upload.single('image'), authJwt.verifyToken, auth.createAppHelpline);                    // add AppHelpline
+        app.get('/api/v1/getAllPlaceOfInterestByTypeId/:typeId', auth.getAllPlaceOfInterestByTypeId);                                                                  // all NearByPlace
         app.get('/api/v1/AppHelpline/:appHelplineId', auth.getAppHelplineById);                                                  // view AppHelpline
         app.put('/api/v1/AppHelpline/:appHelplineId', upload.single('image'), authJwt.verifyToken, auth.updateAppHelpline);      // edit AppHelpline
         app.delete("/api/v1/AppHelpline/:id", authJwt.verifyToken, auth.deleteAppHelpline);                                      // delete AppHelpline
@@ -191,4 +193,13 @@ module.exports = (app) => {
         app.delete("/api/v1/Registration/:id", authJwt.verifyToken, auth.deleteRegistration);                                    // delete Registration
         app.get('/api/v1/Registration', auth.getAllRegistration);                                                                // all Registration
         app.get('/api/v1/RegistrationbyType/:type', auth.getAllRegistrationbyType);                                                                // all Registration
+
+
+        
+        app.post('/api/v1/createExhibition', authJwt.verifyToken, auth.createExhibition);                                    // add Registration
+        app.get('/api/v1/Exhibition/:ExhibitionId', auth.getExhibitionById);                                               // view Exhibition
+        app.put('/api/v1/Exhibition/:ExhibitionId', authJwt.verifyToken, auth.updateExhibition);                           // edit Exhibition
+        app.delete("/api/v1/Exhibition/:id", authJwt.verifyToken, auth.deleteExhibition);                                    // delete Exhibition
+        app.get('/api/v1/Exhibition', auth.getAllExhibition);                                                                // all Exhibition
+        app.get('/api/v1/ExhibitionbyType/:type', auth.getAllExhibitionbyType);                                                                // all Exhibition
 }
