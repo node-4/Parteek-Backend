@@ -1706,17 +1706,56 @@ exports.deleteDelegate = async (req, res) => {
 };
 exports.getAllDelegate = async (req, res) => {
         try {
-                const categories = await delegate.find();
-                if (categories.length > 0) {
-                        return res.status(200).json({ status: 200, message: 'Delegate found successfully', data: categories });
-                } else {
-                        return res.status(404).json({ status: 404, message: 'Delegate not found.', data: categories });
+                const { search, fromDate, toDate, page, limit } = req.query;
+                let query = {};
+                if (search) {
+                        query.$or = [
+                                { "firstName": { $regex: req.query.search, $options: "i" }, },
+                                { "middleName": { $regex: req.query.search, $options: "i" }, },
+                                { "lastName": { $regex: req.query.search, $options: "i" }, },
+                        ]
                 }
-        } catch (error) {
-                console.error(error);
-                return res.status(500).json({ error: 'Failed to fetch Delegate' });
+                if (fromDate && !toDate) {
+                        query.createdAt = { $gte: fromDate };
+                }
+                if (!fromDate && toDate) {
+                        query.createdAt = { $lte: toDate };
+                }
+                if (fromDate && toDate) {
+                        query.$and = [
+                                { createdAt: { $gte: fromDate } },
+                                { createdAt: { $lte: toDate } },
+                        ]
+                }
+                let options = {
+                        page: Number(page) || 1,
+                        limit: Number(limit) || 15,
+                        sort: { createdAt: -1 },
+                };
+                let data = await delegate.paginate(query, options);
+                if (data.docs.length > 0) {
+                        return res.status(200).json({ status: 200, message: 'Delegate found successfully', data: data.docs });
+                } else {
+                        return res.status(404).json({ status: 404, message: 'Delegate not found.', data: [] });
+                }
+
+        } catch (err) {
+                return res.status(500).send({ msg: "internal server error ", error: err.message, });
         }
 };
+// exports.getAllDelegate = async (req, res) => {
+//         try {
+//                 const categories = await delegate.find();
+//                 if (categories.length > 0) {
+//                         return res.status(200).json({ status: 200, message: 'Delegate found successfully', data: categories });
+//                 } else {
+//                         return res.status(404).json({ status: 404, message: 'Delegate not found.', data: categories });
+//                 }
+//         } catch (error) {
+//                 console.error(error);
+//                 return res.status(500).json({ error: 'Failed to fetch Delegate' });
+//         }
+// };
 exports.createHelpline = async (req, res) => {
         try {
                 const { eventId, helplineNo, helplineTitle, lat, long, description, address, fromDate, toDate, isPublished, showInOrder } = req.body;
