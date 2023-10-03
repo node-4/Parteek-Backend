@@ -4221,19 +4221,16 @@ exports.getAllRegistration = async (req, res) => {
 exports.getAllRegistrationbyType = async (req, res) => {
         try {
                 const categories = await registration.findOne({ type: req.params.type });
-                if (categories.length > 0) {
+                if (categories) {
                         return res.status(200).json({ status: 200, message: 'Registration found successfully', data: categories });
                 } else {
-                        return res.status(404).json({ status: 404, message: 'Registration not found.', data: categories });
+                        return res.status(404).json({ status: 404, message: 'Registration not found.', data: {} });
                 }
         } catch (error) {
                 console.error(error);
                 return res.status(500).json({ error: 'Failed to fetch Registration' });
         }
 };
-
-
-
 exports.createExhibition = async (req, res) => {
         try {
                 const { title, faiMmberCompany, nonfaiMmberCompany, descriptionBelowTitle, description, email, tel, telBelowTitle, telBelowHeading, headingArray, reservationTitle, reservationDescription, hotelTitle, hotelPullmanSingle, hotelPullmanDouble, hotelPullmanRoomType, hotelNovotelSingle, hotelNovotelDouble, hotelNovotelRoomType, type } = req.body;
@@ -4340,10 +4337,10 @@ exports.getAllExhibition = async (req, res) => {
 exports.getAllExhibitionbyType = async (req, res) => {
         try {
                 const categories = await Exhibition.findOne({ type: req.params.type });
-                if (categories.length > 0) {
+                if (categories) {
                         return res.status(200).json({ status: 200, message: 'Exhibition found successfully', data: categories });
                 } else {
-                        return res.status(404).json({ status: 404, message: 'Exhibition not found.', data: categories });
+                        return res.status(404).json({ status: 404, message: 'Exhibition not found.', data: {} });
                 }
         } catch (error) {
                 console.error(error);
