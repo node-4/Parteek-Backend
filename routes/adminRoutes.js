@@ -192,14 +192,14 @@ module.exports = (app) => {
         app.put('/api/v1/Registration/:registrationId', authJwt.verifyToken, auth.updateRegistration);                           // edit Registration
         app.delete("/api/v1/Registration/:id", authJwt.verifyToken, auth.deleteRegistration);                                    // delete Registration
         app.get('/api/v1/Registration', auth.getAllRegistration);                                                                // all Registration
-        app.get('/api/v1/RegistrationbyType/:type', auth.getAllRegistrationbyType);                                                                // all Registration
-
-
-        
+        app.get('/api/v1/RegistrationbyType/:type', auth.getAllRegistrationbyType);                                                // all Registration
         app.post('/api/v1/createExhibition', authJwt.verifyToken, auth.createExhibition);                                    // add Registration
         app.get('/api/v1/Exhibition/:ExhibitionId', auth.getExhibitionById);                                               // view Exhibition
         app.put('/api/v1/Exhibition/:ExhibitionId', authJwt.verifyToken, auth.updateExhibition);                           // edit Exhibition
         app.delete("/api/v1/Exhibition/:id", authJwt.verifyToken, auth.deleteExhibition);                                    // delete Exhibition
         app.get('/api/v1/Exhibition', auth.getAllExhibition);                                                                // all Exhibition
-        app.get('/api/v1/ExhibitionbyType/:type', auth.getAllExhibitionbyType);                                                                // all Exhibition
+        app.get('/api/v1/ExhibitionbyType/:type', auth.getAllExhibitionbyType);                                                                // all Exhibition]
+        app.post("/api/v1/notification/sendNotification", authJwt.verifyToken, auth.sendNotification);
+        app.get("/api/v1/notification/allNotification", authJwt.verifyToken, auth.allNotification);
+
 }
