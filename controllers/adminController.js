@@ -4115,12 +4115,28 @@ exports.getAllCulturalPrograms = async (req, res) => {
                 return res.status(500).json({ error: 'Failed to fetch Cultural Programs' });
         }
 };
+// exports.createRegistration = async (req, res) => {
+//         try {
+//                 const { seminarFeeInclude, seminarFee, onlineRegistration, dulyFiledregistration, SavingBankACNo, bankNameandAddress, branchCode, IFSCcode, micrCode, faiGstNo, faiPanNo, registrationForm, paymentOptionsHeading, paymentOptions, OnTheSpotRegistration, changeInNames, Cancellation, type } = req.body;
+//                 let findCompany = await registration.findOne({ type: type });
+//                 if (findCompany) {
+//                         return res.status(409).json({ status: 409, message: 'Registration already successfully', data: {} });
+//                 } else {
+//                         const newCategory = await registration.create(req.body);
+//                         return res.status(200).json({ status: 200, message: 'Registration created successfully', data: newCategory });
+//                 }
+//         } catch (error) {
+//                 console.error(error);
+//                 return res.status(500).json({ error: 'Failed to create Registration' });
+//         }
+// };
 exports.createRegistration = async (req, res) => {
         try {
-                const { seminarFeeInclude, seminarFee, onlineRegistration, dulyFiledregistration, SavingBankACNo, bankNameandAddress, branchCode, IFSCcode, micrCode, faiGstNo, faiPanNo, registrationForm, paymentOptionsHeading, paymentOptions, OnTheSpotRegistration, changeInNames, Cancellation, type } = req.body;
-                let findCompany = await registration.findOne({ type: type });
+                const { registrationForm } = req.body;
+                let findCompany = await registration.findOne({});
                 if (findCompany) {
-                        return res.status(409).json({ status: 409, message: 'Registration already successfully', data: {} });
+                        const newCategory = await registration.findByIdAndUpdate({ _id: findCompany._id }, { $set: req.body }, { new: true });
+                        return res.status(200).json({ status: 200, message: 'Registration update successfully', data: newCategory });
                 } else {
                         const newCategory = await registration.create(req.body);
                         return res.status(200).json({ status: 200, message: 'Registration created successfully', data: newCategory });
@@ -4207,8 +4223,8 @@ exports.deleteRegistration = async (req, res) => {
 };
 exports.getAllRegistration = async (req, res) => {
         try {
-                const categories = await registration.find({});
-                if (categories.length > 0) {
+                let categories = await registration.findOne({});
+                if (categories) {
                         return res.status(200).json({ status: 200, message: 'Registration found successfully', data: categories });
                 } else {
                         return res.status(404).json({ status: 404, message: 'Registration not found.', data: categories });
@@ -4231,13 +4247,61 @@ exports.getAllRegistrationbyType = async (req, res) => {
                 return res.status(500).json({ error: 'Failed to fetch Registration' });
         }
 };
+// exports.createExhibition = async (req, res) => {
+//         try {
+//                 const { title, faiMmberCompany, nonfaiMmberCompany, descriptionBelowTitle, description, email, tel, telBelowTitle, telBelowHeading, headingArray, reservationTitle, reservationDescription, hotelTitle, hotelPullmanSingle, hotelPullmanDouble, hotelPullmanRoomType, hotelNovotelSingle, hotelNovotelDouble, hotelNovotelRoomType, type } = req.body;
+//                 let findCompany = await Exhibition.findOne({ type: type });
+//                 if (findCompany) {
+//                         return res.status(409).json({ status: 409, message: 'Exhibition already successfully', data: {} });
+//                 } else {
+//                         const newCategory = await Exhibition.create(req.body);
+//                         return res.status(200).json({ status: 200, message: 'Exhibition created successfully', data: newCategory });
+//                 }
+//         } catch (error) {
+//                 console.error(error);
+//                 return res.status(500).json({ error: 'Failed to create Exhibition' });
+//         }
+// };
 exports.createExhibition = async (req, res) => {
         try {
-                const { title, faiMmberCompany, nonfaiMmberCompany, descriptionBelowTitle, description, email, tel, telBelowTitle, telBelowHeading, headingArray, reservationTitle, reservationDescription, hotelTitle, hotelPullmanSingle, hotelPullmanDouble, hotelPullmanRoomType, hotelNovotelSingle, hotelNovotelDouble, hotelNovotelRoomType, type } = req.body;
-                let findCompany = await Exhibition.findOne({ type: type });
+                const { registrationForm } = req.body;
+                let findCompany = await Exhibition.findOne({});
                 if (findCompany) {
                         return res.status(409).json({ status: 409, message: 'Exhibition already successfully', data: {} });
                 } else {
+                        req.body.registrationForm = `< !DOCTYPE html > <html xmlns="http://www.w3.org/1999/xhtml"><head><title></title><meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui"><link rel="stylesheet" href="http://idangero.us/swiper/dist/css/swiper.css"><style>body {margin: 0;
+                                }html {font - family: Roboto, sans-serif;text-align: justify;color: #777777;font-size: 14px;
+                                }h5 {font - size: 15px;margin: 10px 0;
+                                } .tabs ul {list - style: none;margin: 0;width: 100%;overflow-x: auto;padding: 0;background: #fff;white-space: nowrap;height: 40px;overflow-y: hidden;display: table;
+                                } .tabs ul li {width: 1%;display: table-cell;
+                                } .tabs ul li {width: 1%;display: table-cell;
+                                } .tabs a {position: relative;color: #83c45d;text-decoration: none;display: block;width: auto;height: 40px;text-align: center;line-height: 40px;font-weight: 700;font-size: 14px;overflow: hidden;font-weight: normal;padding: 0 12px;
+                                } .tabs {position: fixed;width: 100%;top: 0px;z-index: 2;overflow-x: auto;box-shadow: 0px 1px 7px #808080;
+                                } .tabs li.tabitem.active {border - bottom: 2px solid #83c45d;
+                                } table {width: 100%;
+                                } table td {border: 1px solid #eee;padding: 10px 5px;
+                                } .swiper-container {width: 100%;height: auto;border-bottom: none;overflow-x: hidden;overflow-y: auto;
+                                } .descriptionBody {text - align: justify;margin-top: 55px;padding: 0 10px;
+                                } .swiper-slide {min - width: 100%;
+                                } ul {list - style: circle;padding-left: 20px;
+                                }</style></head><body><div id='tabs' class="tabs"><ul><li class="tabitem active"><a href="#" data-slide="0">INDIAN<span></span></a></li><li class="tabitem"><a href="#" data-slide="1">OVERSEAS<span></span></a></li></ul></div><div class="descriptionBody"><div class="swiper-container"><div class="swiper-wrapper"><div class="swiper-slide"><h5>SEMINAR FEE</h5><ul><li>Members: Rs. 18,
+                                000 + 18% GST per delegate</li><li>Non-members: Rs. 29,
+                                000 + 18% GST per delegate</li></ul><h5>Seminar Fee includes:</h5><ul><li>Seminar Kit with Pre-prints of Seminar Papers</li><li>High Tea, Cultural Programme, Cocktails and Dinner on December 5,
+                                2017 (Tuesday)</li><li>Working lunches and pre/post lunch tea/coffee on December 6-7,
+                                2017 (Wednesday &amp; Thursday)</li></ul><br /><h3>Procedure of Registration &amp; Payment</h3><h5>I. ONLINE REGISTRATION</h5><p>For registering online, please visit FAI website <a href="https://falcon.spectra.co/fai/html/fai.html" target="_blank"> www.faidelhi.org</a></p><h5>II. Registration Form</h5><p>Nominations in the attached <a href="http://43.242.124.76:8052/AppUploads/FAI-Registration-Indian-13.pdf" target="_top">registration form</a>, along with the seminar fee, should be sent to The Fertiliser Association of India, New Delhi.</p><h4>Payment Options</h4><p>Payment can be made either of the following:</p><ul><li>Bankers' cheque / demand draft payable at New Delhi in favour of 'The Fertiliser Association of India'.</li > <li>Through NEFT / RTGS under intimation to FAI as per the details given below:<br style="box-sizing:border-box;" /></li></ul ><br /><table><tr><td>Saving Bank A/c No.</td><td>1484101006029.</td></tr><tr><td>Bank Name and Address</td><td><strong>CANARA BANK</strong><br>Jit Singh Marg,<br>New Delhi &ndash; 110 067</td></tr><tr><td>Branch code</td><td>1484</td></tr><tr><td>IFSC code</td><td>CNRB0001484</td></tr><tr><td>MICR Code</td><td>110015015</td></tr><tr><td>FAI - GSTIN</td><td>07AAACT0097M1Z3</td></tr><tr><td>FAI - PAN No.</td><td>AAACT0097M</td></tr></table><h5>Duly filled registration form should be sent to:</h5><p style="font-size:15px">The Secretary<br>The Fertiliser Association of India<br style="box-sizing:border-box;" />FAI House,
+                                10 Shaheed Jit Singh Marg<br style="box-sizing:border-box;" />New Delhi &ndash; 110067<br style="box-sizing:border-box;" />Tel: +91-11- 46005204/46005233/46005209<br style="box-sizing:border-box;" />Fax: +91-11-26960052/46005213<br style="box-sizing:border-box;" />Email: secy@faidelhi.org; acctt@faidelhi.org</p><h5>On The Spot Registration</h5><p>It can be done by payment of Cash, Demand Draft or Credit Card at the venue of the seminar.</p><h5>Change in Names/Cancellation</h5><p>Change in names of the delegates or cancellation of registration can be made up to&nbsp;<strong style="box-sizing:border-box;">25th November, 2017.</strong> Please note that any request for cancellation/refund after this date will be eligible for only 50% refund after deducting the service tax paid to the Government of India. Only the names of delegates registered by&nbsp;<strong style="box-sizing:border-box;">25th November,
+                                2017</strong>&nbsp;will appear in the printed List of Delegates.</p></div><div class="swiper-slide"><h5>SEMINAR FEE</h5><ul><li>Members: US$ 2200 + 18% GST per delegate</li><li>Non-members: US$ 2600 + 18% GST per delegate</li></ul><h5>Seminar Fee includes:</h5><ul><li>Seminar Kit with Pre-prints of Seminar Papers</li><li>High Tea, Cultural Programme, Cocktails and Dinner on December 5,
+                                2017 (Tuesday)</li><li>Working lunches and pre/post lunch tea/coffee on December 6-7,
+                                2017 (Wednesday &amp; Thursday)</li></ul><br /><h3>Procedure of Registration &amp; Payment</h3><h5>I. ONLINE REGISTRATION</h5><p>For registering online, please visit FAI website <a href="https://falcon.spectra.co/fai/html/fai.html" target="_blank"> www.faidelhi.org</a></p><h5>II. Registration Form</h5><p>Nominations in the attached <a href="http://43.242.124.76:8052/AppUploads/FAI-Registration-overseas-13.pdf" target="_top">registration form</a>, along with the seminar fee, should be sent to The Fertiliser Association of India, New Delhi.</p><h4>Payment Options</h4><p>Payment can be made either of the following:</p><ul><li><strong>Draft:</strong> Please make Bank Draft payable at <strong>New York</strong> in favour of <strong>‘The Fertiliser Association of India'</strong> .</li><li><strong>Wire Transfer:</strong> Mode of transfer of funds to FAI’s Citibank Account should be as per the details given below:</li></ul><br /><table><tr><td>Account Holder's Name</td><td>The Fertiliser Association of India</td></tr><tr><td>Account Holder’s Address</td><td>FAI House,
+                                10 Shaheed Jit Singh Marg,<br />New Delhi - 110 067</td></tr><tr><td>Account Holder’s Bank</td><td><strong>CITIBANK,N.A., Delhi</strong> <br />(Beneficiary Bank)</td></tr><tr><td>Address of the Bank</td><td>Level -1, Gurmehar, A-12, Ring Road<br />South Extn-1, New Delhi - 110 049</td></tr><tr><td>Citibank Contact No.</td><td>Citibank Contact No.</td></tr><tr><td>Current Account Number</td><td>0-414462-006</td></tr><tr><td>ABA Routing Number</td><td>021000089<br />Swift Code CITIUS33 and Nostro Account: 36241797<br />Please fax/email copy of banker's advice to us for follow up.</td></tr><tr><td>Swift Code</td><td>CITIINBX</td></tr><tr><td>Intermediary Bank</td><td>CITIBANK, New York</td></tr><tr><td>FAI - GSTIN </td><td>07AAACT0097M1Z3</td></tr><tr><td>FAI - PAN No.</td><td>AAACT0097M</td></tr></table><h5>Duly filled registration form should be sent to:</h5><p style="font-size:15px">The Secretary<br>The Fertiliser Association of India<br style="box-sizing:border-box;" />FAI House,
+                                10 Shaheed Jit Singh Marg<br style="box-sizing:border-box;" />New Delhi &ndash; 110067<br style="box-sizing:border-box;" />Tel: +91-11- 46005204/46005233/46005209<br style="box-sizing:border-box;" />Fax: +91-11-26960052/46005213<br style="box-sizing:border-box;" />Email: secy@faidelhi.org; acctt@faidelhi.org</p><h5>On The Spot Registration</h5><p>It can be done by payment of Cash, Demand Draft or Credit Card at the venue of the seminar.</p><h5>Change in Names/Cancellation</h5><p>Change in names of the delegates or cancellation of registration can be made up to&nbsp;<strong style="box-sizing:border-box;">25th November, 2017.</strong> Please note that any request for cancellation/refund after this date will be eligible for only 50% refund after deducting the service tax paid to the Government of India. Only the names of delegates registered by&nbsp;<strong style="box-sizing:border-box;">25th November,
+                                2017</strong>&nbsp;will appear in the printed List of Delegates.</p></div></div></div ></div ><script src="http://idangero.us/swiper/js/vendor/jquery-1.11.0.min.js"></script><script src="http://idangero.us/swiper/dist/js/swiper.min.js"></script><script>var swiper = new Swiper('.swiper-container',
+                                {autoHeight: true,
+                                });$('a[data-slide
+                                ]').click(function (e) {e.preventDefault(); $(".tabitem").removeClass("active"); $(this).parent().addClass("active"); swiper.slideTo($(this).data('slide'));
+                                }); swiper.on('slideChange', function () {$(".tabitem").removeClass("active"); $(".tabitem a[data-slide='" + swiper.activeIndex + "']").parent().addClass("active");
+                                });</script></body ></html >`;
+
                         const newCategory = await Exhibition.create(req.body);
                         return res.status(200).json({ status: 200, message: 'Exhibition created successfully', data: newCategory });
                 }
@@ -4323,8 +4387,8 @@ exports.deleteExhibition = async (req, res) => {
 };
 exports.getAllExhibition = async (req, res) => {
         try {
-                const categories = await Exhibition.find({});
-                if (categories.length > 0) {
+                let categories = await Exhibition.findOne({});
+                if (categories) {
                         return res.status(200).json({ status: 200, message: 'Exhibition found successfully', data: categories });
                 } else {
                         return res.status(404).json({ status: 404, message: 'Exhibition not found.', data: categories });
