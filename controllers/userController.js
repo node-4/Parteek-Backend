@@ -40,7 +40,7 @@ exports.login = async (req, res) => {
         }
         const passwordMatch = await bcrypt.compare(password, user.password);
         if (!passwordMatch) {
-            return res.status(401).json({ error: 'Invalid email or password' });
+            return res.status(401).json({ status: 401, message: 'Invalid email or password' });
         }
         const token = jwt.sign({ userId: user._id }, authConfig.secret, { expiresIn: '365d' });
         const obj = { ID: user._id, Mobile: user.mobile, Token: token }
@@ -77,7 +77,7 @@ exports.forgetPassword = async (req, res) => {
             let otpExpiration = new Date(Date.now() + 5 * 60 * 1000);
             const updated = await User.findOneAndUpdate({ _id: data._id }, { $set: { accountVerification: accountVerification, otp: otp, otpExpiration: otpExpiration } }, { new: true, });
             if (updated) {
-                return res.status(200).json({ message: "Otp send to your email.", status: 200, data: updated._id });
+                return res.status(200).json({ message: "Otp send to your email.", status: 200, data: updated });
             }
             // } else {
             //    return     res.status(200).json({ message: "Otp not send on your mail please check.", status: 200, data: {} });
@@ -86,6 +86,28 @@ exports.forgetPassword = async (req, res) => {
     } catch (err) {
         console.log(err.message);
         return res.status(500).send({ msg: "internal server error", error: err.message, });
+    }
+};
+exports.changePassword = async (req, res) => {
+    try {
+        const { otp, newPassword, confirmPassword } = req.body;
+        const user = await User.findOne({ _id: req.params.id });
+        if (user) {
+            if (user.otp !== otp || user.otpExpiration < Date.now()) {
+                return res.status(400).json({ status: 400, message: "Invalid OTP" });
+            }
+            if (newPassword == confirmPassword) {
+                const updated = await User.findOneAndUpdate({ _id: user._id }, { $set: { password: bcrypt.hashSync(req.body.newPassword), accountVerification: true } }, { new: true });
+                return res.status(200).send({ status: 200, message: "Password update successfully.", data: updated, });
+            } else {
+                return res.status(201).send({ status: 201, message: "Password Not matched.", data: {}, });
+            }
+        } else {
+            return res.status(404).json({ status: 404, message: "No data found", data: {} });
+        }
+    } catch (error) {
+        console.log(error);
+        return res.status(501).send({ status: 501, message: "server error.", data: {}, });
     }
 };
 exports.createUser = async (req, res) => {
@@ -130,7 +152,7 @@ exports.update = async (req, res) => {
             if (password) { hashedPassword = await bcrypt.hash(password, 10); }
             if (req.file) {
                 req.body.profilePic = req.file.path;
-            } 
+            }
             let obj = {
                 typeofMember: typeofMember || user.typeofMember,
                 username: username || user.username,
