@@ -3790,37 +3790,61 @@ exports.getAllBookCabs = async (req, res) => {
                 return res.status(500).json({ error: 'Failed to fetch BookCabs' });
         }
 };
+// exports.createChairmanDesk = async (req, res) => {
+//         try {
+//                 const { image, description, name, designation } = req.body;
+//                 let findChairmanDesk = await ChairmanDeskAboutFaiSeminarTheme.findOne({ type: "ChairmanDesk" });
+//                 if (findChairmanDesk) {
+//                         if (req.file) {
+//                                 req.body.image = req.file.path
+//                         } else {
+//                                 req.body.image = findChairmanDesk.image;
+//                         }
+//                         let obj = {
+//                                 type: "ChairmanDesk",
+//                                 image: req.body.image || findChairmanDesk.image,
+//                                 designation: designation || findChairmanDesk.designation,
+//                                 name: name || findChairmanDesk.name,
+//                                 description: description || findChairmanDesk.description
+//                         }
+//                         const newCategory = await ChairmanDeskAboutFaiSeminarTheme.findByIdAndUpdate({ _id: findChairmanDesk._id }, { $set: data }, { new: true });
+//                         return res.status(200).json({ status: 200, message: 'ChairmanDesk update successfully', data: newCategory });
+//                 } else {
+//                         if (req.file) {
+//                                 req.body.image = req.file.path
+//                         } else {
+//                                 return res.status(404).json({ message: "Image require", status: 404, data: {}, });
+//                         }
+//                         let obj = {
+//                                 type: "ChairmanDesk",
+//                                 image: req.body.image,
+//                                 designation: designation,
+//                                 name: name,
+//                                 description: description
+//                         }
+//                         const newCategory = await ChairmanDeskAboutFaiSeminarTheme.create(obj);
+//                         return res.status(200).json({ status: 200, message: 'ChairmanDesk created successfully', data: newCategory });
+//                 }
+//         } catch (error) {
+//                 console.error(error);
+//                 return res.status(500).json({ error: 'Failed to create ChairmanDesk' });
+//         }
+// };
 exports.createChairmanDesk = async (req, res) => {
         try {
                 const { image, description, name, designation } = req.body;
                 let findChairmanDesk = await ChairmanDeskAboutFaiSeminarTheme.findOne({ type: "ChairmanDesk" });
                 if (findChairmanDesk) {
-                        if (req.file) {
-                                req.body.image = req.file.path
-                        } else {
-                                req.body.image = findChairmanDesk.image;
-                        }
                         let obj = {
                                 type: "ChairmanDesk",
-                                image: req.body.image || findChairmanDesk.image,
-                                designation: designation || findChairmanDesk.designation,
-                                name: name || findChairmanDesk.name,
-                                description: description || findChairmanDesk.description
+                                content: content || findAboutFai.content,
                         }
                         const newCategory = await ChairmanDeskAboutFaiSeminarTheme.findByIdAndUpdate({ _id: findChairmanDesk._id }, { $set: data }, { new: true });
                         return res.status(200).json({ status: 200, message: 'ChairmanDesk update successfully', data: newCategory });
                 } else {
-                        if (req.file) {
-                                req.body.image = req.file.path
-                        } else {
-                                return res.status(404).json({ message: "Image require", status: 404, data: {}, });
-                        }
                         let obj = {
                                 type: "ChairmanDesk",
-                                image: req.body.image,
-                                designation: designation,
-                                name: name,
-                                description: description
+                                content: content
                         }
                         const newCategory = await ChairmanDeskAboutFaiSeminarTheme.create(obj);
                         return res.status(200).json({ status: 200, message: 'ChairmanDesk created successfully', data: newCategory });
@@ -3873,25 +3897,49 @@ exports.getAllChairmanDesk = async (req, res) => {
                 return res.status(500).json({ error: 'Failed to fetch ChairmanDesk' });
         }
 };
+// exports.createAboutFai = async (req, res) => {
+//         try {
+//                 const { description, name, designation, } = req.body;
+//                 let findAboutFai = await ChairmanDeskAboutFaiSeminarTheme.findOne({ type: "AboutFai" });
+//                 if (findAboutFai) {
+//                         let obj = {
+//                                 type: "AboutFai",
+//                                 designation: designation || findAboutFai.designation,
+//                                 name: name || findAboutFai.name,
+//                                 description: description || findAboutFai.description
+//                         }
+//                         const newCategory = await ChairmanDeskAboutFaiSeminarTheme.findByIdAndUpdate({ _id: findAboutFai._id }, { $set: data }, { new: true });
+//                         return res.status(200).json({ status: 200, message: 'AboutFai update successfully', data: newCategory });
+//                 } else {
+//                         let obj = {
+//                                 type: "AboutFai",
+//                                 designation: designation,
+//                                 name: name,
+//                                 description: description
+//                         }
+//                         const newCategory = await ChairmanDeskAboutFaiSeminarTheme.create(obj);
+//                         return res.status(200).json({ status: 200, message: 'AboutFai created successfully', data: newCategory });
+//                 }
+//         } catch (error) {
+//                 console.error(error);
+//                 return res.status(500).json({ error: 'Failed to create AboutFai' });
+//         }
+// };
 exports.createAboutFai = async (req, res) => {
         try {
-                const { description, name, designation, } = req.body;
+                const { content } = req.body;
                 let findAboutFai = await ChairmanDeskAboutFaiSeminarTheme.findOne({ type: "AboutFai" });
                 if (findAboutFai) {
                         let obj = {
                                 type: "AboutFai",
-                                designation: designation || findAboutFai.designation,
-                                name: name || findAboutFai.name,
-                                description: description || findAboutFai.description
+                                content: content || findAboutFai.content,
                         }
-                        const newCategory = await ChairmanDeskAboutFaiSeminarTheme.findByIdAndUpdate({ _id: findAboutFai._id }, { $set: data }, { new: true });
+                        const newCategory = await ChairmanDeskAboutFaiSeminarTheme.findByIdAndUpdate({ _id: findAboutFai._id }, { $set: obj }, { new: true });
                         return res.status(200).json({ status: 200, message: 'AboutFai update successfully', data: newCategory });
                 } else {
                         let obj = {
                                 type: "AboutFai",
-                                designation: designation,
-                                name: name,
-                                description: description
+                                content: content
                         }
                         const newCategory = await ChairmanDeskAboutFaiSeminarTheme.create(obj);
                         return res.status(200).json({ status: 200, message: 'AboutFai created successfully', data: newCategory });
@@ -3944,27 +3992,51 @@ exports.getAllAboutFai = async (req, res) => {
                 return res.status(500).json({ error: 'Failed to fetch AboutFai' });
         }
 };
+// exports.createSeminarTheme = async (req, res) => {
+//         try {
+//                 const { title, date, location, description } = req.body;
+//                 let findSeminarTheme = await ChairmanDeskAboutFaiSeminarTheme.findOne({ type: "SeminarTheme" });
+//                 if (findSeminarTheme) {
+//                         let obj = {
+//                                 type: "SeminarTheme",
+//                                 title: title || findSeminarTheme.title,
+//                                 location: location || findSeminarTheme.location,
+//                                 date: date || findSeminarTheme.date,
+//                                 description: description || findSeminarTheme.description
+//                         }
+//                         const newCategory = await ChairmanDeskAboutFaiSeminarTheme.findByIdAndUpdate({ _id: findSeminarTheme._id }, { $set: obj }, { new: true });
+//                         return res.status(200).json({ status: 200, message: 'ChairmanDesk update successfully', data: newCategory });
+//                 } else {
+//                         let obj = {
+//                                 type: "SeminarTheme",
+//                                 title: req.body.title,
+//                                 location: location,
+//                                 date: date,
+//                                 description: description
+//                         }
+//                         const newCategory = await ChairmanDeskAboutFaiSeminarTheme.create(obj);
+//                         return res.status(200).json({ status: 200, message: 'ChairmanDesk created successfully', data: newCategory });
+//                 }
+//         } catch (error) {
+//                 console.error(error);
+//                 return res.status(500).json({ error: 'Failed to create ChairmanDesk' });
+//         }
+// };
 exports.createSeminarTheme = async (req, res) => {
         try {
-                const { title, date, location, description } = req.body;
+                const { content } = req.body;
                 let findSeminarTheme = await ChairmanDeskAboutFaiSeminarTheme.findOne({ type: "SeminarTheme" });
                 if (findSeminarTheme) {
                         let obj = {
                                 type: "SeminarTheme",
-                                title: title || findSeminarTheme.title,
-                                location: location || findSeminarTheme.location,
-                                date: date || findSeminarTheme.date,
-                                description: description || findSeminarTheme.description
+                                content: content || findSeminarTheme.content,
                         }
                         const newCategory = await ChairmanDeskAboutFaiSeminarTheme.findByIdAndUpdate({ _id: findSeminarTheme._id }, { $set: obj }, { new: true });
                         return res.status(200).json({ status: 200, message: 'ChairmanDesk update successfully', data: newCategory });
                 } else {
                         let obj = {
                                 type: "SeminarTheme",
-                                title: req.body.title,
-                                location: location,
-                                date: date,
-                                description: description
+                                content: content
                         }
                         const newCategory = await ChairmanDeskAboutFaiSeminarTheme.create(obj);
                         return res.status(200).json({ status: 200, message: 'ChairmanDesk created successfully', data: newCategory });

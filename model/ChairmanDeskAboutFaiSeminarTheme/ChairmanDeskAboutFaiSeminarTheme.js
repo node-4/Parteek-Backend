@@ -2,27 +2,33 @@ const mongoose = require('mongoose');
 const mongoosePaginate = require("mongoose-paginate");
 const mongooseAggregatePaginate = require("mongoose-aggregate-paginate");
 const companyCategorySchema = new mongoose.Schema({
-        image: {
+        content: {
                 type: String,
         },
-        title: {
-                type: String,
-        },
-        date: {
-                type: String,
-        },
-        location: {
-                type: String,
-        },
-        description: {
-                type: Array,
-        },
-        name: {
-                type: String,
-        },
-        designation: {
-                type: String,
-        },
+
+
+
+        // image: {
+        //         type: String,
+        // },
+        // title: {
+        //         type: String,
+        // },
+        // date: {
+        //         type: String,
+        // },
+        // location: {
+        //         type: String,
+        // },
+        // description: {
+        //         type: Array,
+        // },
+        // name: {
+        //         type: String,
+        // },
+        // designation: {
+        //         type: String,
+        // },
         type: {
                 type: String,
                 enum: ["ChairmanDesk", "AboutFai", "SeminarTheme"]
