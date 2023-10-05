@@ -170,7 +170,7 @@ module.exports = (app) => {
         app.put('/api/v1/BookCabs/:bookCabsId', upload.single('image'), authJwt.verifyToken, auth.updateBookCabs);               // edit BookCabs
         app.delete("/api/v1/BookCabs/:id", authJwt.verifyToken, auth.deleteBookCabs);                                            // delete BookCabs
         app.get('/api/v1/BookCabs', auth.getAllBookCabs);                                                                        // all BookCabs
-        app.post('/api/v1/ChairmanDesk', upload.single('image'), authJwt.verifyToken, auth.createChairmanDesk);                  // add ChairmanDesk
+        app.post('/api/v1/ChairmanDesk', authJwt.verifyToken, auth.createChairmanDesk);                  // add ChairmanDesk
         app.get('/api/v1/ChairmanDesk/:chairmanDeskId', auth.getChairmanDeskById);                                               // view ChairmanDesk
         app.delete("/api/v1/ChairmanDesk/:id", authJwt.verifyToken, auth.deleteChairmanDesk);                                    // delete ChairmanDesk
         app.get('/api/v1/ChairmanDesk', auth.getAllChairmanDesk);                                                                // all ChairmanDesk
