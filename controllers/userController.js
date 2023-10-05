@@ -30,6 +30,8 @@ const User = require('../model/userModel');
 const jwt = require('jsonwebtoken');
 var newOTP = require("otp-generators");
 const authConfig = require("../configs/auth.config");
+const appointment = require('../model/Appointment/appointment');
+const remainder = require('../model/remainder');
 
 exports.login = async (req, res) => {
     try {
@@ -258,5 +260,132 @@ exports.giveFeedback = async (req, res) => {
     } catch (err) {
         console.log(err);
         return res.status(500).json({ message: "Error ", status: 500, data: err.message });
+    }
+};
+exports.createApointmentforuser = async (req, res) => {
+    try {
+        const { delegateId, date, time, venue, note } = req.body;
+        if (!delegateId && !date && !time) {
+            return res.status(400).json({ message: "Provide all required fields: delegateId, date, time", status: 400, data: {} });
+        }
+        let userId = req.user._id;
+        let findCompany = await appointment.findOne({ delegateId, date, time, userId });
+        if (findCompany) {
+            return res.status(409).json({ status: 409, message: 'EventOrganiser already exists', data: {} });
+        } else {
+            req.body.userId = req.user._id;
+            req.body.userRecivedSent = "Sent";
+            req.body.delegateRecivedSent = "Recived";
+            const newCategory = await appointment.create(req.body);
+            return res.status(200).json({ status: 200, message: 'EventOrganiser created successfully', data: newCategory });
+        }
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ error: 'Failed to create eventOrganiser' });
+    }
+};
+exports.createApointmentforDelegate = async (req, res) => {
+    try {
+        const { userId, delegateId, date, time, venue, note } = req.body;
+        if (!delegateId && !userId && !date && !time) {
+            return res.status(400).json({ message: "Provide all required fields: delegateId, date, time", status: 400, data: {} });
+        }
+        let findCompany = await appointment.findOne({ delegateId, date, time, userId });
+        if (findCompany) {
+            return res.status(409).json({ status: 409, message: 'EventOrganiser already exists', data: {} });
+        } else {
+            req.body.userRecivedSent = "Recived";
+            req.body.delegateRecivedSent = "Sent";
+            const newCategory = await appointment.create(req.body);
+            return res.status(200).json({ status: 200, message: 'EventOrganiser created successfully', data: newCategory });
+        }
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ error: 'Failed to create eventOrganiser' });
+    }
+};
+exports.getUserRecivedAppointment = async (req, res) => {
+    try {
+        const userId = req.params.id;
+        const user = await appointment.findOne({ userId: userId, userRecivedSent: "Recived" });
+        if (user) {
+            return res.status(201).json({ message: "Get Recived Appointment", status: 200, data: user, });
+        }
+        return res.status(201).json({ message: "Get Recived Appointment not Found", status: 404, data: {}, });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ error: "Failed to retrieve Get Recived Appointment" });
+    }
+};
+exports.getUserSentAppointment = async (req, res) => {
+    try {
+        const userId = req.params.id;
+        const user = await appointment.findOne({ userId: userId, userRecivedSent: "Sent" });
+        if (user) {
+            return res.status(201).json({ message: "Get Send Appointment", status: 200, data: user, });
+        }
+        return res.status(201).json({ message: "Get Send Appointment not Found", status: 404, data: {}, });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ error: "Failed to retrieve Get Send Appointment" });
+    }
+};
+exports.getDelegateRecivedAppointment = async (req, res) => {
+    try {
+        const userId = req.params.id;
+        const user = await appointment.findOne({ delegateId: userId, delegateRecivedSent: "Recived" });
+        if (user) {
+            return res.status(201).json({ message: "Get Recived Appointment", status: 200, data: user, });
+        }
+        return res.status(201).json({ message: "Get Recived Appointment not Found", status: 404, data: {}, });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ error: "Failed to retrieve Get Recived Appointment" });
+    }
+};
+exports.getDelegateSentAppointment = async (req, res) => {
+    try {
+        const userId = req.params.id;
+        const user = await appointment.findOne({ delegateId: userId, delegateRecivedSent: "Sent" });
+        if (user) {
+            return res.status(201).json({ message: "Get Send Appointment", status: 200, data: user, });
+        }
+        return res.status(201).json({ message: "Get Send Appointment not Found", status: 404, data: {}, });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ error: "Failed to retrieve Get Send Appointment" });
+    }
+};
+exports.loginGuestUser = async (req, res) => {
+    try {
+        const { username, email, mobile } = req.body;
+        const existingUser = await User.findOne({ username, mobile, email, userType: "GUEST" });
+        if (existingUser) {
+            const token = jwt.sign({ userId: existingUser._id }, authConfig.secret, { expiresIn: '365d' });
+            const obj = { ID: existingUser._id, Mobile: existingUser.mobile, Token: token }
+            return res.status(200).json({ status: 200, message: "Login sucessfully", data: obj });
+        }
+        const newUser = await User.create({ username, mobile, email, userType: "GUEST", });
+        const token = jwt.sign({ userId: newUser._id }, authConfig.secret, { expiresIn: '365d' });
+        const obj = { ID: newUser._id, Mobile: newUser.mobile, Token: token }
+        return res.status(200).json({ status: 200, message: "Login sucessfully", data: obj });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+};
+exports.createRemainder = async (req, res) => {
+    try {
+        const { eventId, userId } = req.body;
+        let findCompany = await remainder.findOne({ eventId, userId });
+        if (findCompany) {
+            return res.status(409).json({ status: 409, message: 'remainder already exists', data: {} });
+        } else {
+            const newCategory = await remainder.create(req.body);
+            return res.status(200).json({ status: 200, message: 'remainder created successfully', data: newCategory });
+        }
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ error: 'Failed to create remainder' });
     }
 };

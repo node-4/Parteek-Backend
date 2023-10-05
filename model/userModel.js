@@ -6,6 +6,10 @@ const userSchema = new mongoose.Schema({
         type: String,
         enum: ["FAI Employess", "FAI Members"],
     },
+    userType: {
+        type: String,
+        enum: ["USER", "ADMIN", "GUEST"],
+    },
     username: {
         type: String,
     },

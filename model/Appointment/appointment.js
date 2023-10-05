@@ -6,6 +6,10 @@ const companyCategorySchema = new mongoose.Schema({
                 type: mongoose.Schema.Types.ObjectId,
                 ref: "delegate"
         },
+        userId: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "User"
+        },
         date: {
                 type: Date,
         },
@@ -17,6 +21,14 @@ const companyCategorySchema = new mongoose.Schema({
         },
         note: {
                 type: String,
+        },
+        userRecivedSent: {
+                type: String,
+                enum: ["Recived", "Sent"]
+        },
+        delegateRecivedSent: {
+                type: String,
+                enum: ["Recived", "Sent"]
         },
         status: {
                 type: String,
