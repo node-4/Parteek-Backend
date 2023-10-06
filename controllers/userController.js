@@ -197,9 +197,9 @@ exports.update = async (req, res) => {
                 openForAppointment: openForAppointment || user.openForAppointment,
             }
             const newUser = await User.findByIdAndUpdate({ _id: user._id }, { $set: obj }, { new: true });
-            return res.status(201).json({ status: 200, message: 'User update successfully', data: newUser });
+            return res.status(200).json({ status: 200, message: 'User update successfully', data: newUser });
         }
-        return res.status(201).json({ message: "user not Found", status: 404, data: {}, });
+        return res.status(404).json({ message: "user not Found", status: 404, data: {}, });
     } catch (error) {
         console.error(error);
         return res.status(500).json({ error: 'Internal server error' });
