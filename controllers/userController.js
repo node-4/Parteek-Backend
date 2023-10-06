@@ -136,6 +136,29 @@ exports.createUser = async (req, res) => {
         return res.status(500).json({ error: 'Internal server error' });
     }
 };
+exports.changePasswordAfterLogin = async (req, res) => {
+    try {
+        const { password, newPassword, confirmPassword } = req.body;
+        const user = await User.findOne({ _id: req.params.id });
+        if (user) {
+            const passwordMatch = await bcrypt.compare(password, user.password);
+            if (!passwordMatch) {
+                return res.status(401).json({ status: 401, message: 'old password not matched' });
+            }
+            if (newPassword == confirmPassword) {
+                const updated = await User.findOneAndUpdate({ _id: user._id }, { $set: { password: bcrypt.hashSync(req.body.newPassword) } }, { new: true });
+                return res.status(200).send({ status: 200, message: "Password update successfully.", data: updated, });
+            } else {
+                return res.status(201).send({ status: 201, message: "Password Not matched.", data: {}, });
+            }
+        } else {
+            return res.status(404).json({ status: 404, message: "No data found", data: {} });
+        }
+    } catch (error) {
+        console.log(error);
+        return res.status(501).send({ status: 501, message: "server error.", data: {}, });
+    }
+};
 exports.update = async (req, res) => {
     try {
         const { typeofMember, username, email, password, mobile, designation, address1, address2, countryId, cityId, bio, pinCode, showEmail, showContact, openForAppointment } = req.body;
