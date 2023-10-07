@@ -11,7 +11,7 @@ module.exports = (app) => {
         app.post("/api/v1/auth/changePasswordAfterLogin/:id", auth.changePasswordAfterLogin);
         app.post("/api/v1/auth/register", authJwt.verifyToken, auth.createUser);
         app.get("/api/v1/auth/users", authJwt.verifyToken, auth.getAllUsers);
-        app.get("/api/v1/users/:id", authJwt.verifyToken, auth.getUserById);
+        app.get("/api/v1/users/:id", auth.getUserById);
         app.put("/api/v1/users/update/:id", upload.single('image'), authJwt.verifyToken, auth.update);
         app.delete("/api/v1/users/:id", authJwt.verifyToken, auth.deleteUser);
         app.post("/api/v1/auth/giveFeedback", authJwt.verifyToken, auth.giveFeedback);
