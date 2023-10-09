@@ -203,6 +203,7 @@ module.exports = (app) => {
         app.get('/api/v1/ExhibitionbyType/:type', auth.getAllExhibitionbyType);                                                                // all Exhibition]
         app.post("/api/v1/notification/sendNotification", authJwt.verifyToken, auth.sendNotification);
         app.get("/api/v1/notification/allNotification", authJwt.verifyToken, auth.allNotification);
+        app.delete("/api/v1/notification/:id", authJwt.verifyToken, auth.deleteNotification);                                    // delete Exhibition
         app.post('/api/v1/createProgram', authJwt.verifyToken, auth.createProgram);
         app.get('/api/v1/Program/:id', auth.getProgramById);                                                                // view Program                          
         app.get("/api/v1/program/get/All", auth.getAllProgram);
