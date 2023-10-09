@@ -115,9 +115,6 @@ const userSchema = new mongoose.Schema({
     delegateLoginId: {
         type: String,
     },
-    delegatePassword: {
-        type: String,
-    },
     mobileNumber: String,
     aboutMySelf: String,
     isPublished: {
@@ -183,7 +180,7 @@ const userSchema = new mongoose.Schema({
     },
     sponserType: {
         type: String,
-        enum: ["Silver", "Gold"],
+        enum: ["Silver", "Gold", "Diamond", "Platinum", "Others"],
     },
     sponserName: {
         type: String,

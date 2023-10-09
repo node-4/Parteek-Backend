@@ -33,7 +33,7 @@ const nodemailer = require("nodemailer");
 exports.login = async (req, res) => {
     try {
         const { email, password, typeofMember } = req.body;
-        const user = await User.findOne({ email, typeofMember });
+        const user = await User.findOne({ email });
         if (!user) {
             return res.status(401).json({ error: 'Invalid email or password' });
         }
@@ -51,29 +51,19 @@ exports.login = async (req, res) => {
 };
 exports.forgetPassword = async (req, res) => {
     try {
-        const data = await User.findOne({ email: req.body.email, typeofMember: req.body.typeofMember });
+        const data = await User.findOne({ email: req.body.email });
         if (!data) {
             return res.status(400).send({ msg: "not found" });
         } else {
             let otp = newOTP.generate(4, { alphabets: false, upperCase: false, specialChar: false, });
             const transporter = nodemailer.createTransport({
-                host: 'smtp.ethereal.email',
+                host: 'faidelhi.mithiskyconnect.com',
                 port: 587,
                 auth: {
-                    user: "magnus88@ethereal.email",
-                    pass: "e4xYPwuaUbX2u4Qjyy",
+                    user: "secy@faidelhi.org",
+                    pass: "SeCyF^ih0$",
                 },
             });
-            // const transporter = nodemailer.createTransport({
-            //     service: "Faidelhi.mithiskyconnect.com",
-            //     host: 'faidelhi.org',
-            //     secure: true,
-            //     port: 465,
-            //     auth: {
-            //         user: "secy@faidelhi.org",
-            //         pass: "SeCyF^ih0$",
-            //     },
-            // });
             let mailOptions;
             mailOptions = {
                 from: 'secy@faidelhi.org',
