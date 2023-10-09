@@ -12,9 +12,11 @@ module.exports = (app) => {
         app.get('/api/v1/location/:locationId', auth.getLocationById);                                                           // view
         app.put('/api/v1/locations/:locationId', authJwt.verifyToken, auth.updateLocation);                                      // edit
         app.get('/api/v1/getAllLocationCountry', authJwt.verifyToken, auth.getAllLocationCountry);                               // all Country
-        app.get('/api/v1/getAllLocationState/:country', auth.getAllLocationState);                                               // all State
+        app.get('/api/v1/getAllLocationState/:country', auth.getAllLocationStateByCountry);        // all State
+        app.get('/api/v1/getAll/LocationState', auth.getAllLocationState);                                             // all State
         app.get('/api/v1/getAllLocationCityByCountry/:country', auth.getAllLocationCityByCountry);                               // all city
         app.get('/api/v1/getAllLocationCityByState/:state', auth.getAllLocationCityByState);                                     // all city
+        app.get('/api/v1/getAllLocationCity', auth.getAllLocationCity);                                     // all city
         app.post('/api/v1/Company', authJwt.verifyToken, auth.createCompany);                                                    // add Company
         app.get('/api/v1/Company/:companyId', auth.getCompanyById);                                                              // view Company
         app.put('/api/v1/Company/:companyId', auth.updateCompany);                                                               // edit Company
@@ -170,7 +172,7 @@ module.exports = (app) => {
         app.put('/api/v1/BookCabs/:bookCabsId', upload.single('image'), authJwt.verifyToken, auth.updateBookCabs);               // edit BookCabs
         app.delete("/api/v1/BookCabs/:id", authJwt.verifyToken, auth.deleteBookCabs);                                            // delete BookCabs
         app.get('/api/v1/BookCabs', auth.getAllBookCabs);                                                                        // all BookCabs
-        app.post('/api/v1/ChairmanDesk', authJwt.verifyToken, auth.createChairmanDesk);                  // add ChairmanDesk
+        app.post('/api/v1/ChairmanDesk', authJwt.verifyToken, auth.createChairmanDesk);                                          // add ChairmanDesk
         app.get('/api/v1/ChairmanDesk/:chairmanDeskId', auth.getChairmanDeskById);                                               // view ChairmanDesk
         app.delete("/api/v1/ChairmanDesk/:id", authJwt.verifyToken, auth.deleteChairmanDesk);                                    // delete ChairmanDesk
         app.get('/api/v1/ChairmanDesk', auth.getAllChairmanDesk);                                                                // all ChairmanDesk
@@ -201,5 +203,8 @@ module.exports = (app) => {
         app.get('/api/v1/ExhibitionbyType/:type', auth.getAllExhibitionbyType);                                                                // all Exhibition]
         app.post("/api/v1/notification/sendNotification", authJwt.verifyToken, auth.sendNotification);
         app.get("/api/v1/notification/allNotification", authJwt.verifyToken, auth.allNotification);
-
+        app.post('/api/v1/createProgram', authJwt.verifyToken, auth.createProgram);
+        app.get('/api/v1/Program/:id', auth.getProgramById);                                                                // view Program                          
+        app.get("/api/v1/program/get/All", auth.getAllProgram);
+        app.delete("/api/v1/Program/:id", authJwt.verifyToken, auth.deleteProgram);                                    // delete Program
 }

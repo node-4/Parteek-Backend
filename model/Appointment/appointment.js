@@ -4,7 +4,7 @@ const mongooseAggregatePaginate = require("mongoose-aggregate-paginate");
 const companyCategorySchema = new mongoose.Schema({
         delegateId: {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: "delegate"
+                ref: "User"
         },
         userId: {
                 type: mongoose.Schema.Types.ObjectId,

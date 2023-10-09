@@ -22,5 +22,6 @@ module.exports = (app) => {
         app.get("/api/v1/auth/getDelegateRecivedAppointment/:id", auth.getDelegateRecivedAppointment);
         app.get("/api/v1/auth/getDelegateSentAppointment/:id", auth.getDelegateSentAppointment);
         app.post("/api/v1/auth/createRemainder", auth.createRemainder);
+        app.get("/api/v1/auth/searchApi", auth.searchApi);
 
 }

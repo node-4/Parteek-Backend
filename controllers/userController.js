@@ -3,7 +3,6 @@ const advertisement = require('../model/Advertisement/advertisement');
 const banner = require('../model/Banner/banner');
 const company = require('../model/company/company');
 const CompanyCategory = require('../model/company/companyCategoryModel');
-const delegate = require('../model/Delegate/delegate');
 const dgDesk = require('../model/dgDesk/dgDesk');
 const eventCategory = require('../model/Event/1eventCategory');
 const eventOrganiser = require('../model/Event/2eventOrganiser');
@@ -22,8 +21,6 @@ const meeting = require('../model/Meeting/meeting');
 const nearByInterestType = require('../model/NearByPlaceAndInterest/nearByInterestType');
 const nearByPlaceAndInterest = require('../model/NearByPlaceAndInterest/nearByPlaceAndInterest');
 const paper = require('../model/Speaker/paper');
-const speaker = require('../model/Speaker/speaker');
-const sponser = require('../model/Sponser/sponser');
 const uploadAlbum = require('../model/UploadAlbum/uploadAlbum');
 const Location = require('../model/locationModel');
 const User = require('../model/userModel');
@@ -222,11 +219,10 @@ exports.getUserById = async (req, res) => {
         const userId = req.params.id;
         const user = await User.findById(userId);
         if (user) {
-            return res.status(201).json({ message: "user Found", status: 200, data: user, });
+            return res.status(200).json({ message: "user Found", status: 200, data: user, });
         }
-        return res.status(201).json({ message: "user not Found", status: 404, data: {}, });
+        return res.status(404).json({ message: "user not Found", status: 404, data: {}, });
     } catch (error) {
-        console.error(error);
         return res.status(500).json({ error: "Failed to retrieve users" });
     }
 };
@@ -410,5 +406,52 @@ exports.createRemainder = async (req, res) => {
     } catch (error) {
         console.error(error);
         return res.status(500).json({ error: 'Failed to create remainder' });
+    }
+};
+exports.searchApi = async (req, res) => {
+    try {
+        const { search, fromDate, toDate, page, limit } = req.query;
+        let query = {};
+        if (search) {
+            query.$or = [
+                { "firstName": { $regex: req.query.search, $options: "i" }, },
+                { "middleName": { $regex: req.query.search, $options: "i" }, },
+                { "lastName": { $regex: req.query.search, $options: "i" }, },
+                { "username": { $regex: req.query.search, $options: "i" }, },
+                { "email": { $regex: req.query.search, $options: "i" }, },
+                { "otherEmail": { $regex: req.query.search, $options: "i" }, },
+                { "speakerTitle": { $regex: req.query.search, $options: "i" }, },
+                { "speakerName": { $regex: req.query.search, $options: "i" }, },
+                { "delegateTitle": { $regex: req.query.search, $options: "i" }, },
+                { "sponserName": { $regex: req.query.search, $options: "i" }, },
+                { "sponserShortname": { $regex: req.query.search, $options: "i" }, },
+            ]
+        }
+        if (fromDate && !toDate) {
+            query.createdAt = { $gte: fromDate };
+        }
+        if (!fromDate && toDate) {
+            query.createdAt = { $lte: toDate };
+        }
+        if (fromDate && toDate) {
+            query.$and = [
+                { createdAt: { $gte: fromDate } },
+                { createdAt: { $lte: toDate } },
+            ]
+        }
+        let options = {
+            page: Number(page) || 1,
+            limit: Number(limit) || 15,
+            sort: { createdAt: -1 },
+        };
+        let data = await User.paginate(query, options);
+        if (data.docs.length > 0) {
+            return res.status(200).json({ status: 200, message: 'Data found successfully', data: data });
+        } else {
+            return res.status(404).json({ status: 404, message: 'Delegate not found.', data: [] });
+        }
+
+    } catch (err) {
+        return res.status(500).send({ msg: "internal server error ", error: err.message, });
     }
 };

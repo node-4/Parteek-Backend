@@ -6,7 +6,6 @@ const ChairmanDeskAboutFaiSeminarTheme = require('../model/ChairmanDeskAboutFaiS
 const company = require('../model/company/company');
 const CompanyCategory = require('../model/company/companyCategoryModel');
 const culturalProgram = require('../model/CulturalProgram/culturalProgram');
-const delegate = require('../model/Delegate/delegate');
 const dgDesk = require('../model/dgDesk/dgDesk');
 const eventCategory = require('../model/Event/1eventCategory');
 const eventOrganiser = require('../model/Event/2eventOrganiser');
@@ -27,12 +26,11 @@ const nearByInterestType = require('../model/NearByPlaceAndInterest/nearByIntere
 const nearByPlaceAndInterest = require('../model/NearByPlaceAndInterest/nearByPlaceAndInterest');
 const registration = require('../model/Registration/registration');
 const paper = require('../model/Speaker/paper');
-const speaker = require('../model/Speaker/speaker');
-const sponser = require('../model/Sponser/sponser');
 const uploadAlbum = require('../model/UploadAlbum/uploadAlbum');
 const Location = require('../model/locationModel');
 const User = require('../model/userModel');
 const notification = require("../model/notification");
+const program = require("../model/Program/program");
 
 exports.createCompanyCategory = async (req, res) => {
         try {
@@ -135,16 +133,26 @@ exports.createLocation = async (req, res) => {
                                         if (!findCountry) {
                                                 return res.status(404).json({ status: 404, message: 'Country not found.', data: findCountry });
                                         } else {
-                                                const savedLocation = await Location.create({ locationType, country: findCountry._id, locationName });
-                                                return res.status(200).json({ status: 200, message: 'Location created successfully', location: savedLocation });
+                                                let findLocation = await Location.findOne({ locationType, country: findCountry._id, locationName });
+                                                if (findLocation) {
+                                                        return res.status(409).json({ status: 409, message: 'Location already exists', data: findLocation });
+                                                } else {
+                                                        const savedLocation = await Location.create({ locationType, country: findCountry._id, locationName });
+                                                        return res.status(200).json({ status: 200, message: 'Location created successfully', location: savedLocation });
+                                                }
                                         }
                                 } else if (locationType === "City") {
                                         let findState = await Location.findOne({ _id: countryState, locationType: "State" });
                                         if (!findState) {
                                                 return res.status(404).json({ status: 404, message: 'State not found.', data: findState });
                                         } else {
-                                                const savedLocation = await Location.create({ locationType, state: countryState, country: findState.country, locationName });
-                                                return res.status(200).json({ status: 200, message: 'Location created successfully', location: savedLocation });
+                                                let findLocation = await Location.findOne({ locationType, state: countryState, country: findState.country, locationName });
+                                                if (findLocation) {
+                                                        return res.status(409).json({ status: 409, message: 'Location already exists', data: findLocation });
+                                                } else {
+                                                        const savedLocation = await Location.create({ locationType, state: countryState, country: findState.country, locationName });
+                                                        return res.status(200).json({ status: 200, message: 'Location created successfully', location: savedLocation });
+                                                }
                                         }
                                 }
                         }
@@ -167,9 +175,22 @@ exports.getAllLocationCountry = async (req, res) => {
                 return res.status(500).json({ status: 500, error: 'Failed to fetch locations' });
         }
 };
-exports.getAllLocationState = async (req, res) => {
+exports.getAllLocationStateByCountry = async (req, res) => {
         try {
                 const locations = await Location.find({ country: req.params.country, locationType: "State" });
+                if (locations.length > 0) {
+                        return res.status(200).json({ status: 200, message: 'States found successfully', data: locations });
+                } else {
+                        return res.status(404).json({ status: 404, message: 'No states found.', data: locations });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ status: 500, error: 'Failed to fetch locations' });
+        }
+};
+exports.getAllLocationState = async (req, res) => {
+        try {
+                const locations = await Location.find({ locationType: "State" });
                 if (locations.length > 0) {
                         return res.status(200).json({ status: 200, message: 'States found successfully', data: locations });
                 } else {
@@ -196,6 +217,19 @@ exports.getAllLocationCityByCountry = async (req, res) => {
 exports.getAllLocationCityByState = async (req, res) => {
         try {
                 const locations = await Location.find({ state: req.params.state, locationType: "City" }).populate({ path: 'state', select: 'locationName' });
+                if (locations.length > 0) {
+                        return res.status(200).json({ status: 200, message: 'Cities found successfully', data: locations });
+                } else {
+                        return res.status(404).json({ status: 404, message: 'No cities found.', data: locations });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ status: 500, error: 'Failed to fetch locations' });
+        }
+};
+exports.getAllLocationCity = async (req, res) => {
+        try {
+                const locations = await Location.find({ locationType: "City" }).populate({ path: 'state', select: 'locationName' });
                 if (locations.length > 0) {
                         return res.status(200).json({ status: 200, message: 'Cities found successfully', data: locations });
                 } else {
@@ -1015,7 +1049,7 @@ exports.createSpeaker = async (req, res) => {
                                 return res.status(404).json({ status: 404, message: 'Event not found' });
                         }
                 }
-                let findSpeaker = await speaker.findOne({ eventId, speakerName });
+                let findSpeaker = await User.findOne({ eventId, speakerName, userType: "SPEAKER" });
                 if (findSpeaker) {
                         return res.status(409).json({ status: 409, message: 'Speaker already exit', data: {} });
                 } else {
@@ -1024,7 +1058,8 @@ exports.createSpeaker = async (req, res) => {
                         } else {
                                 return res.status(404).json({ message: "ProfilePic require", status: 404, data: {}, });
                         }
-                        const newCategory = await speaker.create(req.body);
+                        req.body.userType = "SPEAKER";
+                        const newCategory = await User.create(req.body);
                         return res.status(200).json({ status: 200, message: 'Speaker created successfully', data: newCategory });
                 }
         } catch (error) {
@@ -1035,7 +1070,7 @@ exports.createSpeaker = async (req, res) => {
 exports.getSpeakerById = async (req, res) => {
         try {
                 const speakerId = req.params.speakerId;
-                const user = await speaker.findById(speakerId);
+                const user = await User.findOne({ _id: speakerId, userType: "SPEAKER" });
                 if (user) {
                         return res.status(200).json({ message: "Speaker found successfully", status: 200, data: user, });
                 }
@@ -1049,7 +1084,7 @@ exports.updateSpeaker = async (req, res) => {
         try {
                 const { eventId, speakerTitle, speakerName, companyId, designation, email, contactNo, speakerAbstractId, profilePic, biography, isPublished, showInOrder, listAsspeaker, } = req.body;
                 const speakerId = req.params.speakerId;
-                const findData = await speaker.findById(speakerId);
+                const findData = await User.findOne({ _id: speakerId, userType: "SPEAKER" });
                 if (!findData) {
                         return res.status(404).json({ message: "Event not Found", status: 404, data: {}, });
                 }
@@ -1071,7 +1106,7 @@ exports.updateSpeaker = async (req, res) => {
                                 return res.status(404).json({ status: 404, message: 'Event not found' });
                         }
                 }
-                let findCompany = await speaker.findOne({ _id: { $ne: findData._id }, eventId, speakerName, });
+                let findCompany = await User.findOne({ _id: { $ne: findData._id }, userType: "SPEAKER", eventId, speakerName, });
                 if (findCompany) {
                         return res.status(409).json({ status: 409, message: 'Event already Exit', data: findCategory });
                 } else {
@@ -1096,7 +1131,7 @@ exports.updateSpeaker = async (req, res) => {
                                 showInOrder: showInOrder || findData.showInOrder,
                                 listAsspeaker: listAsspeaker || findData.listAsspeaker,
                         }
-                        const newCategory = await speaker.findByIdAndUpdate({ _id: findData._id }, { $set: data }, { new: true });
+                        const newCategory = await User.findByIdAndUpdate({ _id: findData._id }, { $set: data }, { new: true });
                         return res.status(200).json({ status: 200, message: 'Speaker update successfully', data: newCategory });
                 }
         } catch (error) {
@@ -1107,9 +1142,9 @@ exports.updateSpeaker = async (req, res) => {
 exports.deleteSpeaker = async (req, res) => {
         try {
                 const speakerId = req.params.id;
-                const user = await speaker.findById(speakerId);
+                const user = await User.findOne({ _id: speakerId, userType: "SPEAKER" });
                 if (user) {
-                        const user1 = await speaker.findByIdAndDelete({ _id: user._id });;
+                        const user1 = await User.findByIdAndDelete({ _id: user._id });;
                         if (user1) {
                                 return res.status(200).json({ message: "Speaker delete successfully.", status: 200, data: {}, });
                         }
@@ -1123,7 +1158,7 @@ exports.deleteSpeaker = async (req, res) => {
 };
 exports.getAllSpeaker = async (req, res) => {
         try {
-                const categories = await speaker.find();
+                const categories = await User.find({ userType: "SPEAKER" });
                 if (categories.length > 0) {
                         return res.status(200).json({ status: 200, message: 'Speaker found successfully', data: categories });
                 } else {
@@ -1158,7 +1193,7 @@ exports.createSponser = async (req, res) => {
                                 return res.status(404).json({ status: 404, message: 'Event not found' });
                         }
                 }
-                let findSpeaker = await sponser.findOne({ eventId, sponserType, sponserName, sponserCountryId, sponserCityId, pinCode });
+                let findSpeaker = await User.findOne({ eventId, sponserType, sponserName, sponserCountryId, sponserCityId, pinCode, userType: "SPONSER" });
                 if (findSpeaker) {
                         return res.status(409).json({ status: 409, message: 'Sponser already exit', data: {} });
                 } else {
@@ -1171,7 +1206,8 @@ exports.createSponser = async (req, res) => {
                                 coordinates = [parseFloat(lat), parseFloat(long)]
                                 req.body.location = { type: "Point", coordinates };
                         }
-                        const newCategory = await sponser.create(req.body);
+                        req.body.userType = "SPONSER";
+                        const newCategory = await User.create(req.body);
                         return res.status(200).json({ status: 200, message: 'Sponser created successfully', data: newCategory });
                 }
         } catch (error) {
@@ -1182,7 +1218,7 @@ exports.createSponser = async (req, res) => {
 exports.getSponserById = async (req, res) => {
         try {
                 const sponserId = req.params.sponserId;
-                const user = await sponser.findById(sponserId);
+                const user = await User.findOne({ _id: sponserId, userType: "SPONSER" });
                 if (user) {
                         return res.status(200).json({ message: "Sponser found successfully", status: 200, data: user, });
                 }
@@ -1196,7 +1232,7 @@ exports.updateSponser = async (req, res) => {
         try {
                 const { eventId, sponserType, sponserName, sponserShortname, sponserLabel, sponserAddress, sponserCountryId, sponserCityId, pinCode, lat, long, sponserLogo, sponserDescription, sponserFromDate, sponserToDate, sponserWebUrl, contactPerson, contactPersonNo, isPublished, showInOrder, meetAt } = req.body;
                 const sponserId = req.params.sponserId;
-                const findData = await sponser.findById(sponserId);
+                const findData = await User.findOne({ _id: sponserId, userType: "SPONSER" });
                 if (!findData) {
                         return res.status(404).json({ message: "Sponser not Found", status: 404, data: {}, });
                 }
@@ -1218,7 +1254,7 @@ exports.updateSponser = async (req, res) => {
                                 return res.status(404).json({ status: 404, message: 'Event not found' });
                         }
                 }
-                let findCompany = await sponser.findOne({ _id: { $ne: findData._id }, eventId, sponserType, sponserName, sponserCountryId, sponserCityId, pinCode, });
+                let findCompany = await User.findOne({ _id: { $ne: findData._id }, userType: "SPONSER", eventId, sponserType, sponserName, sponserCountryId, sponserCityId, pinCode, });
                 if (findCompany) {
                         return res.status(409).json({ status: 409, message: 'Event already Exit', data: findCategory });
                 } else {
@@ -1255,7 +1291,7 @@ exports.updateSponser = async (req, res) => {
                                 meetAt: meetAt || findData.meetAt,
                                 location: location || findData.location,
                         }
-                        const newCategory = await sponser.findByIdAndUpdate({ _id: findData._id }, { $set: data }, { new: true });
+                        const newCategory = await User.findByIdAndUpdate({ _id: findData._id }, { $set: data }, { new: true });
                         return res.status(200).json({ status: 200, message: 'Speaker update successfully', data: newCategory });
                 }
         } catch (error) {
@@ -1266,9 +1302,9 @@ exports.updateSponser = async (req, res) => {
 exports.deleteSponser = async (req, res) => {
         try {
                 const sponserId = req.params.id;
-                const user = await sponser.findById(sponserId);
+                const user = await User.findOne({ _id: sponserId, userType: "SPONSER" });
                 if (user) {
-                        const user1 = await sponser.findByIdAndDelete({ _id: user._id });;
+                        const user1 = await User.findByIdAndDelete({ _id: user._id });;
                         if (user1) {
                                 return res.status(200).json({ message: "Sponser delete successfully.", status: 200, data: {}, });
                         }
@@ -1282,7 +1318,7 @@ exports.deleteSponser = async (req, res) => {
 };
 exports.getAllSponser = async (req, res) => {
         try {
-                const categories = await sponser.find();
+                const categories = await User.find({ userType: "SPONSER" });
                 if (categories.length > 0) {
                         return res.status(200).json({ status: 200, message: 'Sponser found successfully', data: categories });
                 } else {
@@ -1450,13 +1486,13 @@ exports.createEventSchedule = async (req, res) => {
                 }
                 const findEvent = await event.findById(eventId); if (!findEvent) { return res.status(404).json({ status: 404, message: 'Event not found' }); }
                 const findSession = await eventSession.findById(eventSessionId); if (!findSession) { return res.status(404).json({ status: 404, message: 'Event Session not found' }); }
-                if (speaker1) { const findSpeaker1 = await speaker.findById(speaker1); if (!findSpeaker1) { return res.status(404).json({ status: 404, message: 'Speaker1 not found' }); } }
-                if (speaker2) { const findSpeaker2 = await speaker.findById(speaker2); if (!findSpeaker2) { return res.status(404).json({ status: 404, message: 'Speaker2 not found' }); } }
-                if (speaker3) { const findSpeaker3 = await speaker.findById(speaker3); if (!findSpeaker3) { return res.status(404).json({ status: 404, message: 'Speaker3 not found' }); } }
-                if (speaker4) { const findSpeaker4 = await speaker.findById(speaker4); if (!findSpeaker4) { return res.status(404).json({ status: 404, message: 'speaker4 not found' }); } }
-                if (speaker5) { const findSpeaker5 = await speaker.findById(speaker5); if (!findSpeaker5) { return res.status(404).json({ status: 404, message: 'speaker5 not found' }); } }
-                if (sponser1) { const findSponser1 = await sponser.findById(sponser1); if (!findSponser1) { return res.status(404).json({ status: 404, message: 'Sponser1 not found' }); } }
-                if (sponser2) { const findSponser2 = await sponser.findById(sponser2); if (!findSponser2) { return res.status(404).json({ status: 404, message: 'Sponser2 not found' }); } }
+                if (speaker1) { const findSpeaker1 = await User.findOne({ _id: speaker1, userType: "SPEAKER" }); if (!findSpeaker1) { return res.status(404).json({ status: 404, message: 'Speaker1 not found' }); } }
+                if (speaker2) { const findSpeaker2 = await User.findOne({ _id: speaker2, userType: "SPEAKER" }); { return res.status(404).json({ status: 404, message: 'Speaker2 not found' }); } }
+                if (speaker3) { const findSpeaker3 = await User.findOne({ _id: speaker3, userType: "SPEAKER" }); if (!findSpeaker3) { return res.status(404).json({ status: 404, message: 'Speaker3 not found' }); } }
+                if (speaker4) { const findSpeaker4 = await User.findOne({ _id: speaker4, userType: "SPEAKER" }); if (!findSpeaker4) { return res.status(404).json({ status: 404, message: 'speaker4 not found' }); } }
+                if (speaker5) { const findSpeaker5 = await User.findOne({ _id: speaker5, userType: "SPEAKER" }); if (!findSpeaker5) { return res.status(404).json({ status: 404, message: 'speaker5 not found' }); } }
+                if (sponser1) { const findSponser1 = await User.findOne({ _id: sponser1, userType: "SPONSER" }); if (!findSponser1) { return res.status(404).json({ status: 404, message: 'Sponser1 not found' }); } }
+                if (sponser2) { const findSponser2 = await User.findOne({ _id: sponser2, userType: "SPONSER" }); if (!findSponser2) { return res.status(404).json({ status: 404, message: 'Sponser2 not found' }); } }
                 let findCompany = await eventSchedule.findOne({ eventId, eventSessionId, programTitle, programDate, programFromTime, programToTime });
                 if (findCompany) {
                         return res.status(409).json({ status: 409, message: 'EventSchedule already exit', data: {} });
@@ -1494,13 +1530,13 @@ exports.updateEventSchedule = async (req, res) => {
                 const findData = await eventSchedule.findById(eventScheduleId); if (!findData) { return res.status(404).json({ message: "EventSchedule not Found", status: 404, data: {}, }); }
                 if (eventId) { const findEvent = await event.findById(eventId); if (!findEvent) { return res.status(404).json({ status: 404, message: 'Event not found' }); } }
                 if (eventSessionId) { const findSession = await eventSession.findById(eventSessionId); if (!findSession) { return res.status(404).json({ status: 404, message: 'Event Session not found' }); } }
-                if (speaker1) { const findSpeaker1 = await speaker.findById(speaker1); if (!findSpeaker1) { return res.status(404).json({ status: 404, message: 'Speaker1 not found' }); } }
-                if (speaker2) { const findSpeaker2 = await speaker.findById(speaker2); if (!findSpeaker2) { return res.status(404).json({ status: 404, message: 'Speaker2 not found' }); } }
-                if (speaker3) { const findSpeaker3 = await speaker.findById(speaker3); if (!findSpeaker3) { return res.status(404).json({ status: 404, message: 'Speaker3 not found' }); } }
-                if (speaker4) { const findSpeaker4 = await speaker.findById(speaker4); if (!findSpeaker4) { return res.status(404).json({ status: 404, message: 'speaker4 not found' }); } }
-                if (speaker5) { const findSpeaker5 = await speaker.findById(speaker5); if (!findSpeaker5) { return res.status(404).json({ status: 404, message: 'speaker5 not found' }); } }
-                if (sponser1) { const findSponser1 = await sponser.findById(sponser1); if (!findSponser1) { return res.status(404).json({ status: 404, message: 'Sponser1 not found' }); } }
-                if (sponser2) { const findSponser2 = await sponser.findById(sponser2); if (!findSponser2) { return res.status(404).json({ status: 404, message: 'Sponser2 not found' }); } }
+                if (speaker1) { const findSpeaker1 = await User.findOne({ _id: speaker1, userType: "SPEAKER" }); if (!findSpeaker1) { return res.status(404).json({ status: 404, message: 'Speaker1 not found' }); } }
+                if (speaker2) { const findSpeaker2 = await User.findOne({ _id: speaker2, userType: "SPEAKER" }); { return res.status(404).json({ status: 404, message: 'Speaker2 not found' }); } }
+                if (speaker3) { const findSpeaker3 = await User.findOne({ _id: speaker3, userType: "SPEAKER" }); if (!findSpeaker3) { return res.status(404).json({ status: 404, message: 'Speaker3 not found' }); } }
+                if (speaker4) { const findSpeaker4 = await User.findOne({ _id: speaker4, userType: "SPEAKER" }); if (!findSpeaker4) { return res.status(404).json({ status: 404, message: 'speaker4 not found' }); } }
+                if (speaker5) { const findSpeaker5 = await User.findOne({ _id: speaker5, userType: "SPEAKER" }); if (!findSpeaker5) { return res.status(404).json({ status: 404, message: 'speaker5 not found' }); } }
+                if (sponser1) { const findSponser1 = await User.findOne({ _id: sponser1, userType: "SPONSER" }); if (!findSponser1) { return res.status(404).json({ status: 404, message: 'Sponser1 not found' }); } }
+                if (sponser2) { const findSponser2 = await User.findOne({ _id: sponser2, userType: "SPONSER" }); if (!findSponser2) { return res.status(404).json({ status: 404, message: 'Sponser2 not found' }); } }
                 let findCompany = await eventSchedule.findOne({ _id: { $ne: findData._id }, exhibitorName, eventId, exhibitorCountryId, exhibitorCityId, });
                 if (findCompany) {
                         return res.status(409).json({ status: 409, message: 'EventSchedule already Exit', data: findCategory });
@@ -1596,7 +1632,7 @@ exports.createDelegate = async (req, res) => {
                 if (!findCountry) {
                         return res.status(404).json({ status: 404, message: 'country not found' });
                 }
-                let findDelegate = await delegate.findOne({ eventId, companyId, delegateCategoryId, email, delegateTitle, firstName, delegateLoginId, address1 });
+                let findDelegate = await User.findOne({ eventId, companyId, delegateCategoryId, email, delegateTitle, firstName, delegateLoginId, address1, userType: "DELEGATE" });
                 if (findDelegate) {
                         return res.status(409).json({ status: 409, message: 'Delegate already exit', data: {} });
                 } else {
@@ -1606,7 +1642,8 @@ exports.createDelegate = async (req, res) => {
                                 return res.status(201).json({ message: "Profile Pic require", status: 201, data: {}, });
                         }
                         req.body.delegatePassword = await bcrypt.hash(delegatePassword, 10);
-                        const newCategory = await delegate.create(req.body);
+                        req.body.userType = "DELEGATE";
+                        const newCategory = await User.create(req.body);
                         return res.status(200).json({ status: 200, message: 'Delegate created successfully', data: newCategory });
                 }
         } catch (error) {
@@ -1617,7 +1654,7 @@ exports.createDelegate = async (req, res) => {
 exports.getDelegateById = async (req, res) => {
         try {
                 const delegateId = req.params.delegateId;
-                const user = await delegate.findById(delegateId);
+                const user = await User.findOne({ _id: delegateId, userType: "DELEGATE" });
                 if (user) {
                         return res.status(200).json({ message: "Delegate found successfully", status: 200, data: user, });
                 }
@@ -1631,13 +1668,14 @@ exports.updateDelegate = async (req, res) => {
         try {
                 const { eventId, companyId, delegateCategoryId, email, otherEmail, delegateTitle, firstName, middleName, lastName, delegateLoginId, delegatePassword, address1, address2, countryId, cityId, pinCode, mobileNumber, profilePic, designation, aboutMySelf, showEmail, showContactNo, openForAppointment, isPublished, sendMail, payment, receiptNo, sponsorer, currency, seminarFee, remarks, registrationNo, showInOrder } = req.body;
                 const delegateId = req.params.delegateId;
-                const findData = await delegate.findById(delegateId); if (!findData) { return res.status(201).json({ message: "Delegate not Found", status: 404, data: {}, }); }
+                const findData = await await User.findOne({ _id: delegateId, userType: "DELEGATE" });
+                if (!findData) { return res.status(201).json({ message: "Delegate not Found", status: 404, data: {}, }); }
                 if (eventId) { const findEvent = await event.findById(eventId); if (!findEvent) { return res.status(404).json({ status: 404, message: 'Event not found' }); } }
                 if (companyId) { const findCompany = await company.findById(companyId); if (!findCompany) { return res.status(404).json({ status: 404, message: 'company not found' }); } }
                 if (delegateCategoryId) { const findDelegateCategory = await CompanyCategory.findById(delegateCategoryId); if (!findDelegateCategory) { return res.status(404).json({ status: 404, message: 'Delegate Category not found' }); } }
                 if (cityId) { const findstateCityId = await Location.findById(cityId); if (!findstateCityId) { return res.status(404).json({ status: 404, message: 'StateCity not found' }); } }
                 if (countryId) { const findCountry = await Location.findById(countryId); if (!findCountry) { return res.status(404).json({ status: 404, message: 'country not found' }); } }
-                let findDelegate = await delegate.findOne({ _id: { $ne: findData._id }, eventId, companyId, delegateCategoryId, email, delegateTitle, firstName, delegateLoginId, address1 });
+                let findDelegate = await User.findOne({ _id: { $ne: findData._id }, userType: "DELEGATE", eventId, companyId, delegateCategoryId, email, delegateTitle, firstName, delegateLoginId, address1 });
                 if (findDelegate) { return res.status(409).json({ status: 409, message: 'Delegate already exit', data: {} }); } else {
                         if (req.file) { req.body.profilePic = req.file.path } else { req.body.profilePic = findData.profilePic };
                         if (delegatePassword) {
@@ -1679,7 +1717,7 @@ exports.updateDelegate = async (req, res) => {
                                 registrationNo: registrationNo || findData.registrationNo,
                                 showInOrder: showInOrder || findData.showInOrder,
                         }
-                        const newCategory = await delegate.findByIdAndUpdate({ _id: findData._id }, { $set: data }, { new: true });
+                        const newCategory = await User.findByIdAndUpdate({ _id: findData._id }, { $set: data }, { new: true });
                         return res.status(200).json({ status: 200, message: 'Delegate update successfully', data: newCategory });
                 }
         } catch (error) {
@@ -1690,9 +1728,9 @@ exports.updateDelegate = async (req, res) => {
 exports.deleteDelegate = async (req, res) => {
         try {
                 const exhibitorId = req.params.id;
-                const user = await delegate.findById(exhibitorId);
+                const user = await User.findOne({ _id: exhibitorId, userType: "DELEGATE" });
                 if (user) {
-                        const user1 = await delegate.findByIdAndDelete({ _id: user._id });;
+                        const user1 = await User.findByIdAndDelete({ _id: user._id });;
                         if (user1) {
                                 return res.status(200).json({ message: "Delegate delete successfully.", status: 200, data: {}, });
                         }
@@ -1707,7 +1745,7 @@ exports.deleteDelegate = async (req, res) => {
 exports.getAllDelegate = async (req, res) => {
         try {
                 const { search, fromDate, toDate, page, limit } = req.query;
-                let query = {};
+                let query = { userType: "DELEGATE" };
                 if (search) {
                         query.$or = [
                                 { "firstName": { $regex: req.query.search, $options: "i" }, },
@@ -1732,9 +1770,9 @@ exports.getAllDelegate = async (req, res) => {
                         limit: Number(limit) || 15,
                         sort: { createdAt: -1 },
                 };
-                let data = await delegate.paginate(query, options);
+                let data = await User.paginate(query, options);
                 if (data.docs.length > 0) {
-                        return res.status(200).json({ status: 200, message: 'Delegate found successfully', data: data.docs });
+                        return res.status(200).json({ status: 200, message: 'Delegate found successfully', data: data });
                 } else {
                         return res.status(404).json({ status: 404, message: 'Delegate not found.', data: [] });
                 }
@@ -4577,3 +4615,60 @@ exports.allNotification = async (req, res) => {
                 return res.status(501).send({ status: 501, message: "server error.", data: {}, });
         }
 }
+exports.createProgram = async (req, res) => {
+        try {
+                let findCompany = await program.findOne({ date: req.body.date });
+                if (findCompany) {
+                        return res.status(409).json({ status: 409, message: 'Program already successfully', data: {} });
+                } else {
+                        const newCategory = await program.create(req.body);
+                        return res.status(200).json({ status: 200, message: 'Program created successfully', data: newCategory });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to create ExhibiProgramion' });
+        }
+};
+exports.getProgramById = async (req, res) => {
+        try {
+                const ProgramId = req.params.id;
+                const findData = await program.findById({ _id: ProgramId, });
+                if (findData) {
+                        return res.status(200).json({ message: "Program found successfully", status: 200, data: findData, });
+                }
+                return res.status(404).json({ message: "Program not Found", status: 404, data: {}, });
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: "Failed to retrieve Program" });
+        }
+};
+exports.getAllProgram = async (req, res) => {
+        try {
+                const categories = await program.find({});
+                if (categories.length > 0) {
+                        return res.status(200).json({ status: 200, message: 'Program found successfully', data: categories });
+                } else {
+                        return res.status(404).json({ status: 404, message: 'Program not found.', data: categories });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to fetch Program' });
+        }
+};
+exports.deleteProgram = async (req, res) => {
+        try {
+                const ProgramId = req.params.id;
+                const findData = await program.findById({ _id: ProgramId, });
+                if (findData) {
+                        const user1 = await program.findByIdAndDelete({ _id: findData._id });;
+                        if (user1) {
+                                return res.status(200).json({ message: "Program delete successfully.", status: 200, data: {}, });
+                        }
+                } else {
+                        return res.status(404).json({ message: "Program not Found", status: 404, data: {}, });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: "Failed to retrieve Program" });
+        }
+};

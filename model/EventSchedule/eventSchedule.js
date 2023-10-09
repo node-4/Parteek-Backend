@@ -36,31 +36,31 @@ const companyCategorySchema = new mongoose.Schema({
         },
         speaker1: {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: "speaker"
+                ref: "User"
         },
         speaker2: {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: "speaker"
+                ref: "User"
         },
         speaker3: {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: "speaker"
+                ref: "User"
         },
         speaker4: {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: "speaker"
+                ref: "User"
         },
         speaker5: {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: "speaker"
+                ref: "User"
         },
         sponser1: {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: "sponser"
+                ref: "User"
         },
         sponser2: {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: "sponser"
+                ref: "User"
         },
         showInOrder: {
                 type: Number,
