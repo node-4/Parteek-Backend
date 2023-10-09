@@ -29,7 +29,7 @@ var newOTP = require("otp-generators");
 const authConfig = require("../configs/auth.config");
 const appointment = require('../model/Appointment/appointment');
 const remainder = require('../model/remainder');
-
+const nodemailer = require("nodemailer");
 exports.login = async (req, res) => {
     try {
         const { email, password, typeofMember } = req.body;
@@ -56,31 +56,45 @@ exports.forgetPassword = async (req, res) => {
             return res.status(400).send({ msg: "not found" });
         } else {
             let otp = newOTP.generate(4, { alphabets: false, upperCase: false, specialChar: false, });
-            // var transporter = nodemailer.createTransport({
-            //         service: 'gmail',
-            //         auth: {
-            //                 "user": "",
-            //                 "pass": ""
-            //         }
+            const transporter = nodemailer.createTransport({
+                host: 'smtp.ethereal.email',
+                port: 587,
+                auth: {
+                    user: "magnus88@ethereal.email",
+                    pass: "e4xYPwuaUbX2u4Qjyy",
+                },
+            });
+            // const transporter = nodemailer.createTransport({
+            //     service: "Faidelhi.mithiskyconnect.com",
+            //     host: 'faidelhi.org',
+            //     secure: true,
+            //     port: 465,
+            //     auth: {
+            //         user: "secy@faidelhi.org",
+            //         pass: "SeCyF^ih0$",
+            //     },
             // });
-            // let mailOptions;
-            // mailOptions = {
-            //         from: '',
-            //         to: req.body.email,
-            //         subject: 'Forget password verification',
-            //         text: `Your Account Verification Code is ${otp}`,
-            // };
-            // let info = await transporter.sendMail(mailOptions);
-            // if (info) {
-            let accountVerification = false;
-            let otpExpiration = new Date(Date.now() + 5 * 60 * 1000);
-            const updated = await User.findOneAndUpdate({ _id: data._id }, { $set: { accountVerification: accountVerification, otp: otp, otpExpiration: otpExpiration } }, { new: true, });
-            if (updated) {
-                return res.status(200).json({ message: "Otp send to your email.", status: 200, data: updated });
-            }
-            // } else {
-            //    return     res.status(200).json({ message: "Otp not send on your mail please check.", status: 200, data: {} });
-            // }
+            let mailOptions;
+            mailOptions = {
+                from: 'secy@faidelhi.org',
+                to: req.body.email,
+                subject: 'Forget password verification',
+                text: `Your Account Verification Code is ${otp}`,
+            };
+            console.log(mailOptions);
+            transporter.sendMail(mailOptions, async (error, info) => {
+                if (error) {
+                    console.log(error);
+                    return res.status(200).json({ message: "Otp not send on your mail please check.", status: 200, data: {} });
+                } else {
+                    let accountVerification = false;
+                    let otpExpiration = new Date(Date.now() + 5 * 60 * 1000);
+                    const updated = await User.findOneAndUpdate({ _id: data._id }, { $set: { accountVerification: accountVerification, otp: otp, otpExpiration: otpExpiration } }, { new: true, });
+                    if (updated) {
+                        return res.status(200).json({ message: "Otp send to your email.", status: 200, data: updated });
+                    }
+                }
+            });
         }
     } catch (err) {
         console.log(err.message);
@@ -204,7 +218,7 @@ exports.update = async (req, res) => {
 };
 exports.getAllUsers = async (req, res) => {
     try {
-        const users = await User.find();
+        const users = await User.find().populate('countryId cityId eventId companyId delegateCategoryId speakerAbstractId eventId sponserCountryId sponserCityId');
         if (users.length > 0) {
             return res.status(201).json({ message: "users Found", status: 200, data: users, });
         }
@@ -217,7 +231,7 @@ exports.getAllUsers = async (req, res) => {
 exports.getUserById = async (req, res) => {
     try {
         const userId = req.params.id;
-        const user = await User.findById(userId);
+        const user = await User.findById(userId).populate('countryId cityId eventId companyId delegateCategoryId speakerAbstractId eventId sponserCountryId sponserCityId');;
         if (user) {
             return res.status(200).json({ message: "user Found", status: 200, data: user, });
         }

@@ -17,7 +17,6 @@ const userSchema = new mongoose.Schema({
     },
     email: {
         type: String,
-        required: true,
     },
     otherEmail: {
         type: String,
@@ -37,7 +36,6 @@ const userSchema = new mongoose.Schema({
     },
     address1: {
         type: String,
-        required: true,
     },
     address2: {
         type: String,
@@ -102,11 +100,9 @@ const userSchema = new mongoose.Schema({
     },
     delegateTitle: {
         type: String,
-        required: true,
     },
     firstName: {
         type: String,
-        required: true,
     },
     middleName: {
         type: String,
@@ -118,11 +114,9 @@ const userSchema = new mongoose.Schema({
     },
     delegateLoginId: {
         type: String,
-        required: true,
     },
     delegatePassword: {
         type: String,
-        required: true,
     },
     mobileNumber: String,
     aboutMySelf: String,
@@ -170,7 +164,6 @@ const userSchema = new mongoose.Schema({
     },
     speakerName: {
         type: String,
-        required: true,
     },
     contactNo: {
         type: String,
@@ -188,17 +181,12 @@ const userSchema = new mongoose.Schema({
         type: Boolean,
         default: false,
     },
-    eventId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Event"
-    },
     sponserType: {
         type: String,
         enum: ["Silver", "Gold"],
     },
     sponserName: {
         type: String,
-        required: true,
     },
     sponserShortname: {
         type: String,
@@ -244,11 +232,9 @@ const userSchema = new mongoose.Schema({
     },
     sponserFromDate: {
         type: Date,
-        required: true,
     },
     sponserToDate: {
         type: Date,
-        required: true,
     },
     sponserWebUrl: {
         type: String,
@@ -268,7 +254,6 @@ const userSchema = new mongoose.Schema({
     },
     showInOrder: {
         type: Number,
-        required: true,
     },
     meetAt: {
         type: String,
