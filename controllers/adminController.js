@@ -32,7 +32,51 @@ const User = require('../model/userModel');
 const notification = require("../model/notification");
 const program = require("../model/Program/program");
 const commonFunction = require("../middlewares/commonFunction");
+const jwt = require('jsonwebtoken');
+const authConfig = require("../configs/auth.config");
+const gallery = require("../model/Gallery/gallery");
+const galleryFolder = require("../model/Gallery/galleryFolder");
+const gallerySubFolder = require("../model/Gallery/gallerySubFolder");
 
+exports.createAdmin = async (req, res) => {
+        try {
+                const { username, email, password } = req.body;
+                const existingUser = await User.findOne({ username, userType: "ADMIN" });
+                if (existingUser) {
+                        return res.status(400).json({ status: 400, message: "User name already exists" });
+                }
+                const existingEmail = await User.findOne({ email, userType: "ADMIN" });
+                if (existingEmail) {
+                        return res.status(400).json({ status: 400, message: "Email already exists" });
+                }
+                const hashedPassword = await bcrypt.hash(password, 10);
+                const newUser = new User({ username, email, userType: "ADMIN", password: hashedPassword });
+                await newUser.save();
+                return res.status(201).json({ status: 200, message: 'Admin registered successfully', data: newUser });
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Internal server error' });
+        }
+};
+exports.login = async (req, res) => {
+        try {
+                const { email, password } = req.body;
+                const user = await User.findOne({ email, userType: "ADMIN" });
+                if (!user) {
+                        return res.status(401).json({ error: 'Invalid email or password' });
+                }
+                const passwordMatch = await bcrypt.compare(password, user.password);
+                if (!passwordMatch) {
+                        return res.status(401).json({ status: 401, message: 'Invalid email or password' });
+                }
+                const token = jwt.sign({ userId: user._id }, authConfig.secret, { expiresIn: '365d' });
+                const obj = { ID: user._id, Mobile: user.mobile, Token: token }
+                return res.status(200).json({ status: 200, message: "Login sucessfully", data: obj });
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Internal server error' });
+        }
+};
 exports.createCompanyCategory = async (req, res) => {
         try {
                 const { categoryName, currency, seminarFee, isPublished } = req.body;
@@ -1639,11 +1683,8 @@ exports.createDelegate = async (req, res) => {
                 } else {
                         if (req.file) {
                                 req.body.profilePic = req.file.path
-                        } else {
-                                return res.status(201).json({ message: "Profile Pic require", status: 201, data: {}, });
                         }
                         if (req.body.sendMail == 'true') {
-                                console.log(req.body.receiptNo);
                                 if (req.body.receiptNo == (null || undefined)) {
                                         let mailSend = await commonFunction.receiptNotGiven(req.body.firstName, req.body.middleName, req.body.lastName, req.body.designation, req.body.address1, req.body.email, req.body.delegatePassword)
                                         if (mailSend) {
@@ -1663,7 +1704,7 @@ exports.createDelegate = async (req, res) => {
                                                 return res.status(200).json({ status: 200, message: 'Delegate created successfully', data: newCategory });
                                         } else {
                                                 return res.status(200).json({ status: 200, message: 'Delegate not craete.', data: {} });
-                                        } 
+                                        }
                                 }
                         } else {
                                 req.body.password = await bcrypt.hash(delegatePassword, 10);
@@ -1706,6 +1747,8 @@ exports.updateDelegate = async (req, res) => {
                         if (req.file) { req.body.profilePic = req.file.path } else { req.body.profilePic = findData.profilePic };
                         if (delegatePassword) {
                                 req.body.password = await bcrypt.hash(delegatePassword, 10);
+                        } else {
+                                return res.status(404).json({ status: 404, message: 'Password is required.', data: {} });
                         }
                         let data = {
                                 eventId: eventId || findData.eventId,
@@ -1718,7 +1761,7 @@ exports.updateDelegate = async (req, res) => {
                                 middleName: middleName || findData.middleName,
                                 lastName: lastName || findData.lastName,
                                 delegateLoginId: delegateLoginId || findData.delegateLoginId,
-                                password: req.body.delegatePassword || findData.password,
+                                password: req.body.delegatePassword,
                                 address1: address1 || findData.address1,
                                 address2: address2 || findData.address2,
                                 countryId: countryId || findData.countryId,
@@ -1744,7 +1787,23 @@ exports.updateDelegate = async (req, res) => {
                                 showInOrder: showInOrder || findData.showInOrder,
                         }
                         const newCategory = await User.findByIdAndUpdate({ _id: findData._id }, { $set: data }, { new: true });
-                        return res.status(200).json({ status: 200, message: 'Delegate update successfully', data: newCategory });
+                        if (newCategory.sendMail == true) {
+                                if (newCategory.receiptNo == (null || undefined)) {
+                                        let mailSend = await commonFunction.receiptNotGiven(newCategory.firstName, newCategory.middleName, newCategory.lastName, newCategory.designation, newCategory.address1, newCategory.email, req.body.delegatePassword)
+                                        if (mailSend) {
+                                                return res.status(200).json({ status: 200, message: 'Delegate update successfully', data: newCategory });
+                                        }
+                                } else {
+                                        let mailSend = await commonFunction.receiptGiven(newCategory.firstName, newCategory.middleName, newCategory.lastName, newCategory.designation, newCategory.address1, newCategory.email, req.body.delegatePassword)
+                                        if (mailSend) {
+                                                return res.status(200).json({ status: 200, message: 'Delegate update successfully', data: newCategory });
+                                        } else {
+                                                return res.status(200).json({ status: 200, message: 'Delegate update successfully', data: newCategory });
+                                        }
+                                }
+                        } else {
+                                return res.status(200).json({ status: 200, message: 'Delegate update successfully', data: newCategory });
+                        }
                 }
         } catch (error) {
                 console.error(error);
@@ -1808,19 +1867,47 @@ exports.getAllDelegate = async (req, res) => {
                 return res.status(500).send({ msg: "internal server error ", error: err.message, });
         }
 };
-// exports.getAllDelegate = async (req, res) => {
-//         try {
-//                 const categories = await delegate.find();
-//                 if (categories.length > 0) {
-//                         return res.status(200).json({ status: 200, message: 'Delegate found successfully', data: categories });
-//                 } else {
-//                         return res.status(404).json({ status: 404, message: 'Delegate not found.', data: categories });
-//                 }
-//         } catch (error) {
-//                 console.error(error);
-//                 return res.status(500).json({ error: 'Failed to fetch Delegate' });
-//         }
-// };
+exports.getAllDelegateForApp = async (req, res) => {
+        try {
+                const { search, fromDate, toDate, page, limit } = req.query;
+                let query = { userType: "DELEGATE" };
+                if (search) {
+                        query.$or = [
+                                { "firstName": { $regex: req.query.search, $options: "i" }, },
+                                { "middleName": { $regex: req.query.search, $options: "i" }, },
+                                { "lastName": { $regex: req.query.search, $options: "i" }, },
+                        ]
+                }
+                if (fromDate && !toDate) {
+                        query.createdAt = { $gte: fromDate };
+                }
+                if (!fromDate && toDate) {
+                        query.createdAt = { $lte: toDate };
+                }
+                if (fromDate && toDate) {
+                        query.$and = [
+                                { createdAt: { $gte: fromDate } },
+                                { createdAt: { $lte: toDate } },
+                        ]
+                }
+                let options = {
+                        page: Number(page) || 1,
+                        limit: Number(limit) || 15,
+                        sort: { createdAt: -1 },
+                        populate: 'companyId',
+                        select: 'username email delegateTitle firstName middleName lastName otherEmail mobileNumber bio profilePic companyCategoryId companyName companyCode address1 countryId stateCityId companyNameOnBatch address2 pinCode isdCode'
+                };
+                let data = await User.paginate(query, options);
+                if (data.docs.length > 0) {
+                        return res.status(200).json({ status: 200, message: 'Delegate found successfully', data: data });
+                } else {
+                        return res.status(404).json({ status: 404, message: 'Delegate not found.', data: [] });
+                }
+
+        } catch (err) {
+                return res.status(500).send({ msg: "internal server error ", error: err.message, });
+        }
+};
 exports.createHelpline = async (req, res) => {
         try {
                 const { eventId, helplineNo, helplineTitle, lat, long, description, address, fromDate, toDate, isPublished, showInOrder } = req.body;
@@ -4714,5 +4801,256 @@ exports.deleteProgram = async (req, res) => {
         } catch (error) {
                 console.error(error);
                 return res.status(500).json({ error: "Failed to retrieve Program" });
+        }
+};
+exports.createGallery = async (req, res) => {
+        try {
+                let findCompany = await gallery.findOne({ name: req.body.name });
+                if (findCompany) {
+                        return res.status(409).json({ status: 409, message: 'Gallery already exists', data: {} });
+                } else {
+                        if (req.file) {
+                                req.body.image = req.file.path;
+                        } else {
+                                return res.status(400).json({ message: "Image is required", status: 400, data: {} });
+                        }
+                        const newCategory = await gallery.create(req.body);
+                        return res.status(200).json({ status: 200, message: 'Gallery created successfully', data: newCategory });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to create gallery' });
+        }
+};
+exports.getGalleryById = async (req, res) => {
+        try {
+                const galleryId = req.params.galleryId;
+                const user = await gallery.findById(galleryId);
+                if (user) {
+                        return res.status(200).json({ message: "Gallery found successfully", status: 200, data: user });
+                }
+                return res.status(404).json({ message: "Gallery not found", status: 404, data: {} });
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: "Failed to retrieve Gallery" });
+        }
+};
+exports.updateGallery = async (req, res) => {
+        try {
+                const { name } = req.body;
+                const galleryId = req.params.galleryId;
+                const findData = await gallery.findById(galleryId);
+                if (!findData) {
+                        return res.status(404).json({ message: "Gallery not found", status: 404, data: {} });
+                }
+                let findCompany = await gallery.findOne({ _id: { $ne: findData._id }, name });
+                if (findCompany) {
+                        return res.status(409).json({ status: 409, message: 'Gallery already exists', data: findCategory });
+                } else {
+                        let image;
+                        if (req.file) {
+                                image = req.file.path;
+                        } else {
+                                image = findData.logo;
+                        }
+                        let data = {
+                                name: name || findData.name,
+                                image: image || findData.image,
+                        };
+                        const newCategory = await gallery.findByIdAndUpdate({ _id: findData._id }, { $set: data }, { new: true });
+                        return res.status(200).json({ status: 200, message: 'Gallery updated successfully', data: newCategory });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to update Gallery' });
+        }
+};
+exports.deleteGallery = async (req, res) => {
+        try {
+                const galleryId = req.params.id;
+                const user = await gallery.findById(galleryId);
+
+                if (user) {
+                        const user1 = await gallery.findByIdAndDelete({ _id: user._id });
+
+                        if (user1) {
+                                return res.status(200).json({ message: "Gallery deleted successfully", status: 200, data: {} });
+                        }
+                } else {
+                        return res.status(404).json({ message: "Gallery not found", status: 404, data: {} });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: "Failed to retrieve Gallery" });
+        }
+};
+exports.getAllGallery = async (req, res) => {
+        try {
+                const gallerys = await gallery.find();
+
+                if (gallerys.length > 0) {
+                        return res.status(200).json({ status: 200, message: 'Gallery found successfully', data: gallerys });
+                } else {
+                        return res.status(404).json({ status: 404, message: 'Gallery not found', data: gallerys });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to fetch gallery' });
+        }
+};
+exports.createGalleryFolder = async (req, res) => {
+        try {
+                const user = await gallery.findById({ _id: req.body.galleryId });
+                if (!user) {
+                        return res.status(404).json({ message: "Gallery not found", status: 404, data: {} });
+                }
+                let findCompany = await galleryFolder.findOne({ name: req.body.name, galleryId: { $ne: user._id } });
+                if (findCompany) {
+                        return res.status(409).json({ status: 409, message: 'GalleryFolder already exists', data: {} });
+                } else {
+                        if (req.file) {
+                                req.body.image = req.file.path;
+                        } else {
+                                return res.status(400).json({ message: "Image is required", status: 400, data: {} });
+                        }
+                        const newCategory = await galleryFolder.create(req.body);
+                        return res.status(200).json({ status: 200, message: 'GalleryFolder created successfully', data: newCategory });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to create galleryFolder' });
+        }
+};
+exports.getGalleryFolderById = async (req, res) => {
+        try {
+                const galleryFolderId = req.params.galleryFolderId;
+                const user = await galleryFolder.findById(galleryFolderId);
+                if (user) {
+                        return res.status(200).json({ message: "GalleryFolder found successfully", status: 200, data: user });
+                }
+                return res.status(404).json({ message: "GalleryFolder not found", status: 404, data: {} });
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: "Failed to retrieve GalleryFolder" });
+        }
+};
+exports.getGalleryFolderBygalleryId = async (req, res) => {
+        try {
+                const user = await galleryFolder.find({ galleryId: req.params.galleryId });
+                if (user.length > 0) {
+                        return res.status(200).json({ message: "GalleryFolder found successfully", status: 200, data: user });
+                }
+                return res.status(404).json({ message: "GalleryFolder not found", status: 404, data: {} });
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: "Failed to retrieve GalleryFolder" });
+        }
+};
+exports.deleteGalleryFolder = async (req, res) => {
+        try {
+                const galleryFolderId = req.params.id;
+                const user = await galleryFolder.findById(galleryFolderId);
+                if (user) {
+                        const user1 = await galleryFolder.findByIdAndDelete({ _id: user._id });
+                        if (user1) {
+                                return res.status(200).json({ message: "GalleryFolder deleted successfully", status: 200, data: {} });
+                        }
+                } else {
+                        return res.status(404).json({ message: "GalleryFolder not found", status: 404, data: {} });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: "Failed to retrieve GalleryFolder" });
+        }
+};
+exports.getAllGalleryFolder = async (req, res) => {
+        try {
+                const galleryFolders = await galleryFolder.find();
+                if (galleryFolders.length > 0) {
+                        return res.status(200).json({ status: 200, message: 'GalleryFolder found successfully', data: galleryFolders });
+                } else {
+                        return res.status(404).json({ status: 404, message: 'GalleryFolder not found', data: galleryFolders });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to fetch galleryFolder' });
+        }
+};
+exports.creategallerySubFolder = async (req, res) => {
+        try {
+                const user = await galleryFolder.findById({ _id: req.body.galleryFolderId });
+                if (!user) {
+                        return res.status(404).json({ message: "GalleryFolder not found", status: 404, data: {} });
+                }
+                let findCompany = await gallerySubFolder.findOne({ name: req.body.name, galleryFolderId: { $ne: user._id } });
+                if (findCompany) {
+                        return res.status(409).json({ status: 409, message: 'GallerySubFolder already exists', data: {} });
+                } else {
+                        if (req.file) {
+                                req.body.image = req.file.path;
+                        } else {
+                                return res.status(400).json({ message: "Image is required", status: 400, data: {} });
+                        }
+                        const newCategory = await gallerySubFolder.create(req.body);
+                        return res.status(200).json({ status: 200, message: 'GallerySubFolder created successfully', data: newCategory });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to create GallerySubFolder' });
+        }
+};
+exports.getGallerySubFolderById = async (req, res) => {
+        try {
+                const gallerySubFolderId = req.params.gallerySubFolderId;
+                const user = await gallerySubFolder.findById(gallerySubFolderId);
+                if (user) {
+                        return res.status(200).json({ message: "GallerySubFolder found successfully", status: 200, data: user });
+                }
+                return res.status(404).json({ message: "GallerySubFolder not found", status: 404, data: {} });
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: "Failed to retrieve GallerySubFolder" });
+        }
+};
+exports.getGallerySubFolderBygalleryFolderId = async (req, res) => {
+        try {
+                const user = await gallerySubFolder.find({ galleryFolderId: req.params.galleryFolderId });
+                if (user.length > 0) {
+                        return res.status(200).json({ message: "GallerySubFolder found successfully", status: 200, data: user });
+                }
+                return res.status(404).json({ message: "GallerySubFolder not found", status: 404, data: {} });
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: "Failed to retrieve GallerySubFolder" });
+        }
+};
+exports.deleteGallerySubFolder = async (req, res) => {
+        try {
+                const galleryFolderId = req.params.id;
+                const user = await gallerySubFolder.findById(galleryFolderId);
+                if (user) {
+                        const user1 = await gallerySubFolder.findByIdAndDelete({ _id: user._id });
+                        if (user1) {
+                                return res.status(200).json({ message: "GallerySubFolder deleted successfully", status: 200, data: {} });
+                        }
+                } else {
+                        return res.status(404).json({ message: "GallerySubFolder not found", status: 404, data: {} });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: "Failed to retrieve GallerySubFolder" });
+        }
+};
+exports.getAllGallerySubFolder = async (req, res) => {
+        try {
+                const galleryFolders = await gallerySubFolder.find();
+                if (galleryFolders.length > 0) {
+                        return res.status(200).json({ status: 200, message: 'GallerySubFolder found successfully', data: galleryFolders });
+                } else {
+                        return res.status(404).json({ status: 404, message: 'GallerySubFolder not found', data: galleryFolders });
+                }
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Failed to fetch galleryFolder' });
         }
 };

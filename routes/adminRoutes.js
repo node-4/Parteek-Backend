@@ -3,6 +3,8 @@ const auth = require('../controllers/adminController');
 const authJwt = require("../middlewares/authJwt");
 const { productUpload, upload, bannerUpload, blogUpload, gallaryUpload, NutritionUpload, ProductTypeUpload, SkinConditionUpload, SkinTypeUpload, aboutusUpload, subCategoryUpload, categoryUpload, userProfileUpload, serviceUpload, BrandUpload, E4UUpload, offerUpload } = require('../middlewares/imageUpload')
 module.exports = (app) => {
+        app.post("/api/v1/admin/createAdmin", auth.createAdmin);
+        app.post("/api/v1/admin/login", auth.login);
         app.post('/api/v1/company-categories', auth.createCompanyCategory);                                                      // add
         app.get("/api/v1/company-categories/:id", authJwt.verifyToken, auth.getCompanyCategoryById);                             // view
         app.put("/api/v1/company-categories/update/:id", authJwt.verifyToken, auth.updateCompanyCategory);                       // edit
@@ -72,6 +74,7 @@ module.exports = (app) => {
         app.put('/api/v1/Delegate/:delegateId', upload.single('image'), authJwt.verifyToken, auth.updateDelegate);               // edit Delegate
         app.delete("/api/v1/Delegate/:id", authJwt.verifyToken, auth.deleteDelegate);                                            // delete Delegate
         app.get('/api/v1/Delegate', auth.getAllDelegate);                                                                        // all Delegate
+        app.get('/api/v1/getAllDelegateForApp', auth.getAllDelegateForApp);                                                                        // all Delegate
         app.post('/api/v1/Helpline', authJwt.verifyToken, auth.createHelpline);                                                  // add Helpline
         app.get('/api/v1/Helpline/:helplineId', auth.getHelplineById);                                                           // view Helpline
         app.put('/api/v1/Helpline/:helplineId', authJwt.verifyToken, auth.updateHelpline);                                       // edit Helpline
@@ -208,4 +211,19 @@ module.exports = (app) => {
         app.get('/api/v1/Program/:id', auth.getProgramById);                                                                // view Program                          
         app.get("/api/v1/program/get/All", auth.getAllProgram);
         app.delete("/api/v1/Program/:id", authJwt.verifyToken, auth.deleteProgram);                                    // delete Program
+        app.post('/api/v1/Gallery', upload.single('image'), authJwt.verifyToken, auth.createGallery);              // add Gallery
+        app.get('/api/v1/Gallery/:galleryId', auth.getGalleryById);                                         // view Gallery
+        app.put('/api/v1/Gallery/:galleryId', upload.single('image'), auth.updateGallery);                  // edit Gallery
+        app.delete("/api/v1/Gallery/:id", authJwt.verifyToken, auth.deleteGallery);                                // delete Gallery
+        app.get('/api/v1/Gallery', auth.getAllGallery);  // all Gallery
+        app.post('/api/v1/createGalleryFolder', upload.single('image'), authJwt.verifyToken, auth.createGalleryFolder);              // add Gallery
+        app.get('/api/v1/GalleryFolder/:galleryFolderId', auth.getGalleryFolderById);
+        app.get('/api/v1/GalleryFolderBygalleryId/:galleryId', auth.getGalleryFolderBygalleryId);                                         // view Gallery        // view Gallery
+        app.delete("/api/v1/GalleryFolder/:id", authJwt.verifyToken, auth.deleteGalleryFolder);                                // delete Gallery
+        app.get('/api/v1/GalleryFolder', auth.getAllGalleryFolder);                                                            // all Gallery
+        app.post('/api/v1/creategallerySubFolder', upload.single('image'), authJwt.verifyToken, auth.creategallerySubFolder);              // add Gallery
+        app.get('/api/v1/GallerySubFolder/:gallerySubFolderId', auth.getGallerySubFolderById);
+        app.get('/api/v1/GallerySubFolder/:galleryFolderId', auth.getGallerySubFolderBygalleryFolderId);                                         // view Gallery        // view Gallery
+        app.delete("/api/v1/GallerySubFolder/:id", authJwt.verifyToken, auth.deleteGallerySubFolder);                                // delete Gallery
+        app.get('/api/v1/GallerySubFolder', auth.getAllGallerySubFolder);                                                            // all Gallery
 }

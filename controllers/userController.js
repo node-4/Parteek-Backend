@@ -167,13 +167,26 @@ exports.update = async (req, res) => {
         let hashedPassword;
         const user = await User.findById(userId);
         if (user) {
-            const existingUser = await User.findOne({ _id: { $ne: user._id }, username });
-            if (existingUser) { return res.status(400).json({ status: 400, message: "User name already exists" }); }
-            const existingEmail = await User.findOne({ _id: { $ne: user._id }, email });
-            if (existingEmail) { return res.status(400).json({ status: 400, message: "Email already exists" }); }
-            const existingMobile = await User.findOne({ _id: { $ne: user._id }, mobile });
-            if (existingMobile) { return res.status(400).json({ status: 400, message: "Mobile already exists" }); }
-            if (countryId) { const findCompany = await Location.findById(countryId); if (!findCompany) { return res.status(404).json({ status: 404, message: 'Country not found' }); } }
+            if (username != (null || undefined)) {
+                const existingUser = await User.findOne({ _id: { $ne: user._id }, username });
+                if (existingUser) { return res.status(400).json({ status: 400, message: "User name already exists" }); }
+            }
+            if (email != (null || undefined)) {
+                const existingEmail = await User.findOne({ _id: { $ne: user._id }, email });
+                if (existingEmail) { return res.status(400).json({ status: 400, message: "Email already exists" }); }
+            }
+            if (mobile != (null || undefined)) {
+                const existingMobile = await User.findOne({ _id: { $ne: user._id }, mobile });
+                if (existingMobile) { return res.status(400).json({ status: 400, message: "Mobile already exists" }); }
+            }
+            if (countryId) {
+                const findCompany = await Location.findById(countryId);
+                if (!findCompany) {
+                    return res.status(404).json({ status: 404, message: 'Country not found' });
+                }
+            }
+
+
             if (cityId) { const findEventCategoryId = await Location.findById(cityId); if (!findEventCategoryId) { return res.status(404).json({ status: 404, message: 'City not found' }); } }
             if (password) { hashedPassword = await bcrypt.hash(password, 10); }
             if (req.file) {
@@ -245,44 +258,6 @@ exports.deleteUser = async (req, res) => {
     } catch (error) {
         console.error(error);
         return res.status(500).json({ error: "Failed to retrieve users" });
-    }
-};
-exports.giveFeedback = async (req, res) => {
-    const { type, message, rating } = req.body;
-    try {
-        if (!type && !message || !rating) {
-            return res.status(400).json({ message: "type and  message cannot be blank " });
-        }
-        let findFeedback = await feedback.findOne({ type: type });
-        if (findFeedback) {
-            if (findFeedback.rating.length == 0) {
-                const review = {
-                    user: req.user._id,
-                    message: message,
-                    rating: rating
-                };
-                findFeedback.rating.push(review);
-            } else {
-                const review = {
-                    user: req.user._id,
-                    message: message,
-                    rating: rating
-                };
-                findFeedback.rating.push(review);
-            }
-            let avg = 0;
-            findFeedback.rating.forEach((rev) => { avg += rev.rating; });
-            findFeedback.averageRating = avg / findFeedback.rating.length;
-            await findFeedback.save({ validateBeforeSave: false })
-            return res.status(200).json({ status: 200, data: findFeedback });
-        } else {
-            let obj = { type: type, rating: [{ user: req.user._id, message: message, rating: rating, }], averageRating: rating, }
-            const addDeedback = await feedback.create(obj);
-            return res.status(200).json({ status: 200, message: "Feedback Added Successfully ", data: addDeedback });
-        }
-    } catch (err) {
-        console.log(err);
-        return res.status(500).json({ message: "Error ", status: 500, data: err.message });
     }
 };
 exports.createApointmentforuser = async (req, res) => {
@@ -415,6 +390,7 @@ exports.createRemainder = async (req, res) => {
 exports.searchApi = async (req, res) => {
     try {
         const { search, fromDate, toDate, page, limit } = req.query;
+        const userTypes = ["USER", "DELEGATE", "SPEAKER", "SPONSER"]; // Array of all userTypes
         let query = {};
         if (search) {
             query.$or = [
@@ -441,21 +417,71 @@ exports.searchApi = async (req, res) => {
             query.$and = [
                 { createdAt: { $gte: fromDate } },
                 { createdAt: { $lte: toDate } },
-            ]
+            ];
         }
         let options = {
             page: Number(page) || 1,
-            limit: Number(limit) || 15,
+            limit: Number(limit) || 100,
             sort: { createdAt: -1 },
         };
         let data = await User.paginate(query, options);
-        if (data.docs.length > 0) {
-            return res.status(200).json({ status: 200, message: 'Data found successfully', data: data });
-        } else {
-            return res.status(404).json({ status: 404, message: 'Delegate not found.', data: [] });
-        }
-
+        const userDataByType = {};
+        userTypes.forEach(type => {
+            userDataByType[type] = data.docs.filter(user => user.userType === type);
+        });
+        const responseData = { data: userDataByType, totalDocs: data.totalDocs, totalPages: data.totalPages, currentPage: data.page, };
+        return res.status(200).json({ status: 200, message: 'Data found successfully', data: responseData });
     } catch (err) {
-        return res.status(500).send({ msg: "internal server error ", error: err.message, });
+        return res.status(500).send({ msg: "internal server error ", error: err.message });
+    }
+};
+exports.giveFeedback = async (req, res) => {
+    try {
+        let findFeedback = await feedback.findOne({ user: req.user._id });
+        if (findFeedback) {
+            let obj = {
+                user: req.user._id,
+                message: req.body.meeting || findFeedback.message,
+                rating: req.body.rating || findFeedback.rating,
+                programContents: req.body.programContents || findFeedback.programContents,
+                venue: req.body.venue || findFeedback.venue,
+                food: req.body.food || findFeedback.food,
+                hospitality: req.body.hospitality || findFeedback.hospitality,
+                registration: req.body.registration || findFeedback.registration,
+                app: req.body.app || findFeedback.app,
+            }
+            const newUser = await feedback.findByIdAndUpdate({ _id: findFeedback._id }, { $set: obj }, { new: true });
+            return res.status(200).json({ status: 200, data: newUser });
+        } else {
+            let obj = {
+                user: req.user._id,
+                message: req.body.meeting,
+                rating: req.body.rating,
+                programContents: req.body.programContents,
+                venue: req.body.venue,
+                food: req.body.food,
+                hospitality: req.body.hospitality,
+                registration: req.body.registration,
+                app: req.body.app,
+            }
+            const addDeedback = await feedback.create(obj);
+            return res.status(200).json({ status: 200, message: "Feedback Added Successfully ", data: addDeedback });
+        }
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({ message: "Error ", status: 500, data: err.message });
+    }
+};
+exports.myFeedback = async (req, res) => {
+    try {
+        let findFeedback = await feedback.findOne({ user: req.user._id });
+        if (findFeedback) {
+            return res.status(200).json({ status: 200, data: findFeedback });
+        } else {
+            return res.status(200).json({ status: 200, message: "Feedback fetch Successfully ", data: {} });
+        }
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({ message: "Error ", status: 500, data: err.message });
     }
 };
