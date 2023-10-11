@@ -41,11 +41,11 @@ const gallerySubFolder = require("../model/Gallery/gallerySubFolder");
 exports.createAdmin = async (req, res) => {
         try {
                 const { username, email, password } = req.body;
-                const existingUser = await User.findOne({ username, userType: "ADMIN" });
+                const existingUser = await User.findOne({ username, userType: ["ADMIN", "SUBADMIN"] });
                 if (existingUser) {
                         return res.status(400).json({ status: 400, message: "User name already exists" });
                 }
-                const existingEmail = await User.findOne({ email, userType: "ADMIN" });
+                const existingEmail = await User.findOne({ email, userType: ["ADMIN", "SUBADMIN"] });
                 if (existingEmail) {
                         return res.status(400).json({ status: 400, message: "Email already exists" });
                 }
@@ -61,11 +61,11 @@ exports.createAdmin = async (req, res) => {
 exports.createSubAdmin = async (req, res) => {
         try {
                 const { username, email, password } = req.body;
-                const existingUser = await User.findOne({ username, userType: "SUBADMIN" });
+                const existingUser = await User.findOne({ username, userType: ["ADMIN", "SUBADMIN"] });
                 if (existingUser) {
                         return res.status(400).json({ status: 400, message: "User name already exists" });
                 }
-                const existingEmail = await User.findOne({ email, userType: "SUBADMIN" });
+                const existingEmail = await User.findOne({ email, userType: ["ADMIN", "SUBADMIN"] });
                 if (existingEmail) {
                         return res.status(400).json({ status: 400, message: "Email already exists" });
                 }
@@ -90,7 +90,7 @@ exports.login = async (req, res) => {
                         return res.status(401).json({ status: 401, message: 'Invalid email or password' });
                 }
                 const token = jwt.sign({ userId: user._id }, authConfig.secret, { expiresIn: '365d' });
-                const obj = { ID: user._id, Mobile: user.mobile, Token: token }
+                const obj = { ID: user._id, userType: user.userType, Mobile: user.mobile, Token: token }
                 return res.status(200).json({ status: 200, message: "Login sucessfully", data: obj });
         } catch (error) {
                 console.error(error);
@@ -1766,6 +1766,7 @@ exports.updateDelegate = async (req, res) => {
                 if (findDelegate) { return res.status(409).json({ status: 409, message: 'Delegate already exit', data: {} }); } else {
                         if (req.file) { req.body.profilePic = req.file.path } else { req.body.profilePic = findData.profilePic };
                         if (delegatePassword) {
+                                console.log(delegatePassword);
                                 req.body.password = await bcrypt.hash(delegatePassword, 10);
                         } else {
                                 return res.status(404).json({ status: 404, message: 'Password is required.', data: {} });
@@ -1788,7 +1789,6 @@ exports.updateDelegate = async (req, res) => {
                                 cityId: cityId || findData.cityId,
                                 pinCode: pinCode || findData.pinCode,
                                 mobileNumber: mobileNumber || findData.mobileNumber,
-                                programWebUrl: programWebUrl || findData.programWebUrl,
                                 profilePic: req.body.profilePic,
                                 designation: designation || findData.designation,
                                 aboutMySelf: aboutMySelf || findData.aboutMySelf,
@@ -1807,22 +1807,28 @@ exports.updateDelegate = async (req, res) => {
                                 showInOrder: showInOrder || findData.showInOrder,
                         }
                         const newCategory = await User.findByIdAndUpdate({ _id: findData._id }, { $set: data }, { new: true });
-                        if (newCategory.sendMail == true) {
-                                if (newCategory.receiptNo == (null || undefined)) {
-                                        let mailSend = await commonFunction.receiptNotGiven(newCategory.firstName, newCategory.middleName, newCategory.lastName, newCategory.designation, newCategory.address1, newCategory.email, req.body.delegatePassword)
-                                        if (mailSend) {
-                                                return res.status(200).json({ status: 200, message: 'Delegate update successfully', data: newCategory });
-                                        }
+                        if (newCategory) {
+                                if (findData.sendMail == true) {
+                                        return res.status(200).json({ status: 200, message: 'Delegate update successfully', data: newCategory });
                                 } else {
-                                        let mailSend = await commonFunction.receiptGiven(newCategory.firstName, newCategory.middleName, newCategory.lastName, newCategory.designation, newCategory.address1, newCategory.email, req.body.delegatePassword)
-                                        if (mailSend) {
-                                                return res.status(200).json({ status: 200, message: 'Delegate update successfully', data: newCategory });
+                                        if (newCategory.sendMail == true) {
+                                                if (newCategory.receiptNo == (null || undefined)) {
+                                                        let mailSend = await commonFunction.receiptNotGiven(newCategory.firstName, newCategory.middleName, newCategory.lastName, newCategory.designation, newCategory.address1, newCategory.email, req.body.delegatePassword)
+                                                        if (mailSend) {
+                                                                return res.status(200).json({ status: 200, message: 'Delegate update successfully', data: newCategory });
+                                                        }
+                                                } else {
+                                                        let mailSend = await commonFunction.receiptGiven(newCategory.firstName, newCategory.middleName, newCategory.lastName, newCategory.designation, newCategory.address1, newCategory.email, req.body.delegatePassword)
+                                                        if (mailSend) {
+                                                                return res.status(200).json({ status: 200, message: 'Delegate update successfully', data: newCategory });
+                                                        } else {
+                                                                return res.status(200).json({ status: 200, message: 'Delegate update successfully', data: newCategory });
+                                                        }
+                                                }
                                         } else {
                                                 return res.status(200).json({ status: 200, message: 'Delegate update successfully', data: newCategory });
                                         }
                                 }
-                        } else {
-                                return res.status(200).json({ status: 200, message: 'Delegate update successfully', data: newCategory });
                         }
                 }
         } catch (error) {

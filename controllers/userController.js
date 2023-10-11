@@ -131,7 +131,7 @@ exports.createUser = async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
         const newUser = new User({ typeofMember, username, email, password: hashedPassword, mobile });
         await newUser.save();
-        return res.status(201).json({ status: 200, message: 'User registered successfully', data: newUser });
+        return res.status(200).json({ status: 200, message: 'User registered successfully', data: newUser });
     } catch (error) {
         console.error(error);
         return res.status(500).json({ error: 'Internal server error' });
@@ -223,9 +223,9 @@ exports.getAllUsers = async (req, res) => {
     try {
         const users = await User.find().populate('countryId cityId eventId companyId delegateCategoryId speakerAbstractId eventId sponserCountryId sponserCityId');
         if (users.length > 0) {
-            return res.status(201).json({ message: "users Found", status: 200, data: users, });
+            return res.status(200).json({ message: "users Found", status: 200, data: users, });
         }
-        return res.status(201).json({ message: "users not Found", status: 404, data: {}, });
+        return res.status(404).json({ message: "users not Found", status: 404, data: {}, });
     } catch (error) {
         console.error(error);
         return res.status(500).json({ error: "Failed to retrieve users" });
@@ -250,10 +250,10 @@ exports.deleteUser = async (req, res) => {
         if (user) {
             const user1 = await User.findByIdAndDelete({ _id: user._id });;
             if (user1) {
-                return res.status(201).json({ message: "user delete successfully.", status: 200, data: {}, });
+                return res.status(200).json({ message: "user delete successfully.", status: 200, data: {}, });
             }
         } else {
-            return res.status(201).json({ message: "user not Found", status: 404, data: {}, });
+            return res.status(404).json({ message: "user not Found", status: 404, data: {}, });
         }
     } catch (error) {
         console.error(error);
@@ -307,9 +307,9 @@ exports.getUserRecivedAppointment = async (req, res) => {
         const userId = req.params.id;
         const user = await appointment.findOne({ userId: userId, userRecivedSent: "Recived" });
         if (user) {
-            return res.status(201).json({ message: "Get Recived Appointment", status: 200, data: user, });
+            return res.status(200).json({ message: "Get Recived Appointment", status: 200, data: user, });
         }
-        return res.status(201).json({ message: "Get Recived Appointment not Found", status: 404, data: {}, });
+        return res.status(404).json({ message: "Get Recived Appointment not Found", status: 404, data: {}, });
     } catch (error) {
         console.error(error);
         return res.status(500).json({ error: "Failed to retrieve Get Recived Appointment" });
@@ -320,9 +320,9 @@ exports.getUserSentAppointment = async (req, res) => {
         const userId = req.params.id;
         const user = await appointment.findOne({ userId: userId, userRecivedSent: "Sent" });
         if (user) {
-            return res.status(201).json({ message: "Get Send Appointment", status: 200, data: user, });
+            return res.status(200).json({ message: "Get Send Appointment", status: 200, data: user, });
         }
-        return res.status(201).json({ message: "Get Send Appointment not Found", status: 404, data: {}, });
+        return res.status(404).json({ message: "Get Send Appointment not Found", status: 404, data: {}, });
     } catch (error) {
         console.error(error);
         return res.status(500).json({ error: "Failed to retrieve Get Send Appointment" });
@@ -333,9 +333,9 @@ exports.getDelegateRecivedAppointment = async (req, res) => {
         const userId = req.params.id;
         const user = await appointment.findOne({ delegateId: userId, delegateRecivedSent: "Recived" });
         if (user) {
-            return res.status(201).json({ message: "Get Recived Appointment", status: 200, data: user, });
+            return res.status(200).json({ message: "Get Recived Appointment", status: 200, data: user, });
         }
-        return res.status(201).json({ message: "Get Recived Appointment not Found", status: 404, data: {}, });
+        return res.status(404).json({ message: "Get Recived Appointment not Found", status: 404, data: {}, });
     } catch (error) {
         console.error(error);
         return res.status(500).json({ error: "Failed to retrieve Get Recived Appointment" });
@@ -346,12 +346,28 @@ exports.getDelegateSentAppointment = async (req, res) => {
         const userId = req.params.id;
         const user = await appointment.findOne({ delegateId: userId, delegateRecivedSent: "Sent" });
         if (user) {
-            return res.status(201).json({ message: "Get Send Appointment", status: 200, data: user, });
+            return res.status(200).json({ message: "Get Send Appointment", status: 200, data: user, });
         }
-        return res.status(201).json({ message: "Get Send Appointment not Found", status: 404, data: {}, });
+        return res.status(404).json({ message: "Get Send Appointment not Found", status: 404, data: {}, });
     } catch (error) {
         console.error(error);
         return res.status(500).json({ error: "Failed to retrieve Get Send Appointment" });
+    }
+};
+exports.approveRejectAppointment = async (req, res) => {
+    try {
+        const user = await appointment.findOne({ _id: req.params.id });
+        if (user) {
+            const newUser = await appointment.findByIdAndUpdate({ _id: user._id }, { $set: { status: req.body.status } }, { new: true });
+            return res.status(200).json({ message: `Appointment ${req.body.status}`, status: 200, data: newUser });
+
+        } else {
+            return res.status(404).json({ message: "Appointment not found", status: 404, data: user, });
+        }
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ error: 'Failed to create eventOrganiser' });
     }
 };
 exports.loginGuestUser = async (req, res) => {

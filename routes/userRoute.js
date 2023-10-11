@@ -17,6 +17,7 @@ module.exports = (app) => {
         app.post("/api/v1/auth/giveFeedback", authJwt.verifyToken, auth.giveFeedback);
         app.get("/api/v1/auth/myFeedback", authJwt.verifyToken, auth.myFeedback);
         app.post("/api/v1/auth/createApointmentforuser", authJwt.verifyToken, auth.createApointmentforuser);
+        app.put("/api/v1/auth/approveRejectAppointment/:id", authJwt.verifyToken, auth.approveRejectAppointment);
         app.post("/api/v1/auth/createApointmentforDelegate", auth.createApointmentforDelegate);
         app.get("/api/v1/auth/getUserRecivedAppointment/:id", auth.getUserRecivedAppointment);
         app.get("/api/v1/auth/getUserSentAppointment/:id", auth.getUserSentAppointment);
