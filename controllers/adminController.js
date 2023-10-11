@@ -81,7 +81,7 @@ exports.createSubAdmin = async (req, res) => {
 exports.login = async (req, res) => {
         try {
                 const { email, password } = req.body;
-                const user = await User.findOne({ email, userType: "ADMIN" });
+                const user = await User.findOne({ email, userType: ["ADMIN", "SUBADMIN"] });
                 if (!user) {
                         return res.status(401).json({ error: 'Invalid email or password' });
                 }
