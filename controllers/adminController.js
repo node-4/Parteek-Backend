@@ -58,6 +58,26 @@ exports.createAdmin = async (req, res) => {
                 return res.status(500).json({ error: 'Internal server error' });
         }
 };
+exports.createSubAdmin = async (req, res) => {
+        try {
+                const { username, email, password } = req.body;
+                const existingUser = await User.findOne({ username, userType: "SUBADMIN" });
+                if (existingUser) {
+                        return res.status(400).json({ status: 400, message: "User name already exists" });
+                }
+                const existingEmail = await User.findOne({ email, userType: "SUBADMIN" });
+                if (existingEmail) {
+                        return res.status(400).json({ status: 400, message: "Email already exists" });
+                }
+                const hashedPassword = await bcrypt.hash(password, 10);
+                const newUser = new User({ username, email, userType: "SUBADMIN", password: hashedPassword });
+                await newUser.save();
+                return res.status(201).json({ status: 200, message: 'Sub Admin registered successfully', data: newUser });
+        } catch (error) {
+                console.error(error);
+                return res.status(500).json({ error: 'Internal server error' });
+        }
+};
 exports.login = async (req, res) => {
         try {
                 const { email, password } = req.body;

@@ -4,6 +4,7 @@ const authJwt = require("../middlewares/authJwt");
 const { productUpload, upload, bannerUpload, blogUpload, gallaryUpload, NutritionUpload, ProductTypeUpload, SkinConditionUpload, SkinTypeUpload, aboutusUpload, subCategoryUpload, categoryUpload, userProfileUpload, serviceUpload, BrandUpload, E4UUpload, offerUpload } = require('../middlewares/imageUpload')
 module.exports = (app) => {
         app.post("/api/v1/admin/createAdmin", auth.createAdmin);
+        app.post("/api/v1/admin/createSubAdmin", auth.createSubAdmin);
         app.post("/api/v1/admin/login", auth.login);
         app.post('/api/v1/company-categories', auth.createCompanyCategory);                                                      // add
         app.get("/api/v1/company-categories/:id", authJwt.verifyToken, auth.getCompanyCategoryById);                             // view
